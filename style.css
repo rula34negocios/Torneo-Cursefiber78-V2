@@ -1,0 +1,159 @@
+:root {
+--bg-dark: #0f0f1a;
+--panel-bg: rgba(18, 18, 30, 0.9);
+--primary: #7a3cff;
+--primary-glow: rgba(122, 60, 255, 0.6);
+--accent: #8cf0ff;
+--text-main: #ffffff;
+}
+
+html, body {
+margin: 0;
+padding: 0;
+width: 100%;
+height: 100%;
+background: var(--bg-dark);
+font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+color: var(--text-main);
+}
+
+.container {
+max-width: 1700px;
+margin: 0 auto;
+padding: 20px;
+display: flex;
+flex-direction: column;
+gap: 20px;
+min-height: 100vh;
+box-sizing: border-box;
+}
+
+.header {
+background: var(--panel-bg);
+border: 2px solid rgba(150, 80, 255, 0.6);
+border-radius: 20px;
+padding: 20px;
+display: flex;
+justify-content: space-between;
+align-items: center;
+box-shadow: 0 0 25px var(--primary-glow);
+}
+
+.header h1 {
+margin: 0;
+font-size: 32px;
+color: #c38cff;
+text-shadow: 0 0 15px rgba(195, 140, 255, 0.8);
+}
+
+.nav-links {
+display: flex;
+gap: 10px;
+}
+
+button, a.btn {
+border: none;
+border-radius: 12px;
+padding: 12px 18px;
+font-size: 15px;
+font-weight: bold;
+cursor: pointer;
+transition: 0.2s;
+text-decoration: none;
+display: inline-block;
+text-align: center;
+}
+
+.btn-primary {
+background: linear-gradient(135deg, #7a3cff, #a65cff);
+color: white;
+box-shadow: 0 0 12px var(--primary-glow);
+}
+
+.btn-primary:hover {
+transform: translateY(-2px);
+box-shadow: 0 0 20px rgba(166, 92, 255, 0.9);
+}
+
+.btn-secondary {
+background: rgba(255, 255, 255, 0.08);
+color: white;
+}
+
+.btn-secondary:hover {
+background: rgba(255, 255, 255, 0.15);
+}
+
+.panel {
+background: var(--panel-bg);
+border: 1px solid rgba(255, 255, 255, 0.1);
+border-radius: 20px;
+padding: 20px;
+display: flex;
+flex-direction: column;
+gap: 15px;
+backdrop-filter: blur(10px);
+box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+}
+
+.panel h2 {
+margin: 0 0 10px 0;
+color: var(--accent);
+font-size: 22px;
+text-align: center;
+}
+
+/* Bracket y Equipos genéricos */
+.bracket-wrapper {
+display: flex;
+align-items: center;
+gap: 20px;
+overflow-x: auto;
+padding: 10px;
+justify-content: center;
+}
+
+.round {
+display: flex;
+flex-direction: column;
+justify-content: space-around;
+gap: 20px;
+min-width: 240px;
+}
+
+.match {
+background: rgba(255, 255, 255, 0.04);
+border: 1px solid rgba(255, 255, 255, 0.1);
+border-radius: 14px;
+padding: 12px;
+}
+
+.match-team {
+background: rgba(255, 255, 255, 0.04);
+padding: 10px;
+border-radius: 8px;
+margin: 4px 0;
+text-align: center;
+font-size: 15px;
+}
+
+.match-team.winner {
+background: rgba(80, 255, 120, 0.2);
+border: 1px solid rgba(80, 255, 120, 0.4);
+font-weight: bold;
+color: #9fffb5;
+}
+
+.connector {
+width: 30px;
+height: 2px;
+background: rgba(255, 255, 255, 0.2);
+}
+
+.rank-tag {
+font-size: 11px;
+background: rgba(150, 80, 255, 0.3);
+padding: 2px 6px;
+border-radius: 4px;
+text-transform: uppercase;
+}

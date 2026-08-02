@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Stream Widget - Marcador Estilo Deportes</title>
+  <style>
+    html, body {
+        margin: 0;
+        padding: 0;
+        width: 100%;
+        height: 100%;
+        background: transparent;
+        overflow: hidden;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    .stream-wrapper {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        margin: 15px;
+        filter: drop-shadow(0 10px 15px rgba(0, 0, 0, 0.5));
+    }
+
+    .broadcast-scoreboard {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+    }
+
+    .team-container-left, .team-container-right {
+        position: relative;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .team-container-left {
+        align-items: flex-start;
+    }
+
+    .team-container-right {
+        align-items: flex-end;
+    }
+
+    .broadcast-team-left {
+        background: linear-gradient(135deg, #2b3e50, #1a252f);
+        border: 2px solid #34495e;
+        border-right: none;
+        border-top-left-radius: 8px;
+        border-bottom-left-radius: 8px;
+        padding: 10px 20px;
+        min-width: 140px;
+        max-width: 200px;
+        text-align: right;
+        position: relative;
+        clip-path: polygon(0 0, 100% 0, 92% 100%, 0 100%);
+        z-index: 2;
+    }
+
+    .broadcast-team-right {
+        background: linear-gradient(135deg, #1a252f, #2b3e50);
+        border: 2px solid #34495e;
+        border-left: none;
+        border-top-right-radius: 8px;
+        border-bottom-right-radius: 8px;
+        padding: 10px 20px;
+        min-width: 140px;
+        max-width: 200px;
+        text-align: left;
+        position: relative;
+        clip-path: polygon(8% 0, 100% 0, 100% 100%, 0 100%);
+        z-index: 2;
+    }
+
+    .broadcast-team-name {
+        font-size: 15px;
+        font-weight: 900;
+        color: #ffffff;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        text-shadow: 0 2px 4px rgba(0,0,0,0.6);
+    }
+
+    .broadcast-center {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        z-index: 10;
+    }
+
+    .broadcast-status-badge {
+        background: linear-gradient(180deg, #bdc3c7, #7f8c8d);
+        color: #111;
+        font-size: 9px;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 1.5px;
+        padding: 2px 14px;
+        border-top-left-radius: 6px;
+        border-top-right-radius: 6px;
+        border: 1px solid #95a5a6;
+        border-bottom: none;
+        box-shadow: 0 -2px 5px rgba(0,0,0,0.3);
+    }
+
+    .broadcast-scores-box {
+        background: linear-gradient(135deg, #1e3799, #0c2461);
+        border: 2px solid #4a69bd;
+        border-radius: 6px;
+        padding: 6px 18px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        box-shadow: 0 4px 15px rgba(12, 36, 97, 0.7);
+    }
+
+    .broadcast-score-num {
+        font-size: 24px;
+        font-weight: 900;
+        color: #ffffff;
+        text-shadow: 0 0 10px rgba(255,255,255,0.6);
+        min-width: 24px;
+        text-align: center;
+    }
+
+    .winning-score {
+        color: #2ecc71 !important;
+        text-shadow: 0 0 12px rgba(46, 204, 113, 0.8) !important;
+    }
+
+    .broadcast-score-divider {
+        font-size: 20px;
+        font-weight: 900;
+        color: #4a69bd;
+    }
+
+    @keyframes slideDownWin {
+        0% {
+            transform: translateY(-15px) scaleY(0);
+            opacity: 0;
+        }
+        100% {
+            transform: translateY(0) scaleY(1);
+            opacity: 1;
+        }
+    }
+
+    .stream-win-badge {
+        position: absolute;
+        top: 95%;
+        left: 30%;
+        transform: translateX(-50%);
+        background: linear-gradient(135deg, #f1c40f, #f39c12);
+        color: #1a1a2e;
+        font-size: 11px;
+        font-weight: 900;
+        padding: 2px 18px;
+        border-bottom-left-radius: 120px;
+        border-bottom-right-radius: 6px;
+        letter-spacing: 1.5px;
+        box-shadow: 0 4px 10px rgba(241, 196, 15, 0.4);
+        text-transform: uppercase;
+        z-index: 1;
+        transform-origin: top center;
+        animation: slideDownWin 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+    }
+
+    .waiting-text {
+        color: #aaa;
+        background: rgba(18, 18, 30, 0.9);
+        border: 1px solid rgba(150, 80, 255, 0.4);
+        padding: 10px 20px;
+        border-radius: 8px;
+        font-size: 13px;
+        font-weight: bold;
+        text-align: center;
+    }
+  </style>
+</head>
+<body>
+
+<div id="streamContainer" style="display: flex; justify-content: center; align-items: center; height: 100%;">
+  <div class="waiting-text">Esperando que el admin inicie un combate...</div>
+</div>
+
+<script>
+  const SUPABASE_URL = 'https://twxnbbgusthujzdikjeo.supabase.co';
+  const SUPABASE_ANON_KEY = 'sb_publishable_czF-mMgKB69Ox0JtMb24KA_VSw-LGKm';
+  const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+  let currentMatchData = null;
+  let globalMatchScores = {};
+
+  async function loadActiveMatch() {
+      let { data } = await _supabase.from('tournament_state').select('active_match, match_scores').eq('id', 1).single();
+      if (data) {
+          globalMatchScores = data.match_scores || {};
+          // Validar explícitamente si existe active_match y tiene equipos válidos
+          if (data.active_match && data.active_match.team1 && data.active_match.team2) {
+              currentMatchData = data.active_match;
+              renderStreamMatch(currentMatchData);
+          } else {
+              currentMatchData = null;
+              renderStreamMatch(null);
+          }
+      }
+  }
+
+  function renderStreamMatch(match) {
+      let container = document.getElementById("streamContainer");
+
+      // Si el combate es nulo, vacío o no tiene nombres de equipos válidos, muestra el mensaje de espera
+      if (!match || !match.team1 || !match.team2) {
+          container.innerHTML = `<div class="waiting-text">Esperando que el admin inicie un combate...</div>`;
+          return;
+      }
+
+      let scoreKey = `${match.sideKey}_r${match.rIndex}_m${match.matchIndex}`;
+      let liveScores = globalMatchScores[scoreKey];
+
+      let s1 = liveScores ? liveScores.score1 : (match.score1 !== undefined ? match.score1 : 0);
+      let s2 = liveScores ? liveScores.score2 : (match.score2 !== undefined ? match.score2 : 0);
+
+      let t1 = match.team1;
+      let t2 = match.team2;
+
+      let showWin1 = (s1 > s2);
+      let showWin2 = (s2 > s1);
+
+      let score1Class = s1 > s2 ? "winning-score" : "";
+      let score2Class = s2 > s1 ? "winning-score" : "";
+
+      container.innerHTML = `
+          <div class="stream-wrapper">
+              <div class="broadcast-scoreboard">
+                  <!-- Equipo 1 (Izquierda) -->
+                  <div class="team-container-left">
+                      <div class="broadcast-team-left">
+                          <div class="broadcast-team-name">${t1}</div>
+                      </div>
+                      ${showWin1 ? `<div class="stream-win-badge">WIN</div>` : ''}
+                  </div>
+
+                  <!-- Centro: Estado y Marcador -->
+                  <div class="broadcast-center">
+                      <div class="broadcast-status-badge">EN VIVO</div>
+                      <div class="broadcast-scores-box">
+                          <span class="broadcast-score-num ${score1Class}">${s1}</span>
+                          <span class="broadcast-score-divider">-</span>
+                          <span class="broadcast-score-num ${score2Class}">${s2}</span>
+                      </div>
+                  </div>
+
+                  <!-- Equipo 2 (Derecha) -->
+                  <div class="team-container-right">
+                      <div class="broadcast-team-right">
+                          <div class="broadcast-team-name">${t2}</div>
+                      </div>
+                      ${showWin2 ? `<div class="stream-win-badge">WIN</div>` : ''}
+                  </div>
+              </div>
+          </div>
+      `;
+  }
+
+  loadActiveMatch();
+
+  // Escuchar cambios en tiempo real en la tabla tournament_state
+  _supabase
+    .channel('public:stream_active_match')
+    .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'tournament_state' }, payload => {
+        if (payload.new) {
+            if (payload.new.match_scores) {
+                globalMatchScores = payload.new.match_scores;
+            }
+            // Si el admin limpia o reinicia el active_match (lo manda como null o vacío)
+            if (!payload.new.active_match || !payload.new.active_match.team1 || !payload.new.active_match.team2) {
+                currentMatchData = null;
+                renderStreamMatch(null);
+            } else {
+                currentMatchData = payload.new.active_match;
+                renderStreamMatch(currentMatchData);
+            }
+        }
+    })
+    .subscribe();
+</script>
+
+</body>
+</html>

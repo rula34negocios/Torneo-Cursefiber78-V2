@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login Administrador - Torneo</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        body { display: flex; justify-content: center; align-items: center; height: 100vh; }
+        .login-box { width: 350px; display: flex; flex-direction: column; gap: 15px; }
+        input { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.2); border-radius: 12px; padding: 12px; color: white; font-size: 16px; outline: none; }
+    </style>
+</head>
+<body>
+
+<div class="login-box panel">
+    <h2>🔐 Acceso Admin</h2>
+    <div style="font-size: 13px; color: #aaa; text-align: center;">Introduce la contraseña para gestionar el torneo.</div>
+    <input type="password" id="adminPassword" placeholder="Contraseña...">
+    <button class="btn-primary" onclick="checkLogin()">Ingresar</button>
+    <a href="index.html" class="btn btn-secondary" style="text-align:center;">Volver al Inicio</a>
+</div>
+
+<script>
+    function checkLogin() {
+        const pass = document.getElementById("adminPassword").value;
+        if(pass === "pato es gordo") { // Puedes cambiar la contraseña aquí
+            localStorage.setItem("isAdmin", "true");
+            window.location.href = "admin.html";
+        } else {
+            alert("Contraseña incorrecta.");
+        }
+    }
+</script>
+
+</body>
+</html>

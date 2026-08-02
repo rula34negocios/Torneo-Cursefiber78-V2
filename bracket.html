@@ -1,0 +1,531 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mapa de Trayectoria - Torneo</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        body {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            margin: 0;
+            overflow: hidden;
+            background-color: #0b0b13;
+        }
+
+        .container {
+            display: flex;
+            flex-direction: column;
+            flex: 1;
+            padding: 10px 20px;
+            box-sizing: border-box;
+            width: 100vw;
+            max-width: 100% !important;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .header h1 {
+            font-size: 20px;
+            color: #fff;
+            margin: 0;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 10px;
+        }
+
+        /* Pantalla completa dedicada al bracket aprovechando márgenes */
+        .bracket-fullscreen-grid {
+            display: flex;
+            flex: 1;
+            background: rgba(20, 20, 30, 0.6);
+            border: 1px solid rgba(166, 92, 255, 0.2);
+            border-radius: 16px;
+            padding: 20px;
+            gap: 30px;
+            align-items: center;
+            justify-content: center;
+            overflow-x: auto;
+            backdrop-filter: blur(10px);
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        .esports-match {
+            background: linear-gradient(135deg, rgba(24, 24, 36, 0.95), rgba(35, 35, 55, 0.9));
+            border: 1px solid rgba(166, 92, 255, 0.25);
+            border-radius: 10px;
+            padding: 8px 12px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            min-width: 260px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
+            gap: 10px;
+            position: relative;
+            margin-bottom: 15px;
+        }
+
+        .team-container {
+            position: relative;
+            cursor: pointer;
+            display: inline-block;
+        }
+
+        .esports-team {
+            font-weight: bold;
+            font-size: 13px;
+            color: #ffffff;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 85px;
+            text-align: center;
+            display: block;
+        }
+
+        .esports-score {
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px solid rgba(166, 92, 255, 0.3);
+            border-radius: 6px;
+            padding: 4px 10px;
+            font-weight: bold;
+            font-size: 14px;
+            color: #2ecc71;
+            min-width: 32px;
+            text-align: center;
+            letter-spacing: 1px;
+        }
+
+        .winner-tag-bracket {
+            position: absolute;
+            bottom: -18px;
+            background: linear-gradient(135deg, #f1c40f, #f39c12);
+            color: #1a1a2e;
+            font-size: 10px;
+            font-weight: 900;
+            padding: 2px 10px;
+            border-radius: 4px;
+            letter-spacing: 1px;
+            box-shadow: 0 2px 8px rgba(241, 196, 15, 0.4);
+            text-transform: uppercase;
+            z-index: 5;
+        }
+        .winner-tag-bracket.left { left: 15px; }
+        .winner-tag-bracket.right { right: 15px; }
+
+        .team-container .tooltip-name {
+            visibility: hidden;
+            background-color: #181824;
+            color: #c38cff;
+            text-align: center;
+            border-radius: 6px;
+            padding: 5px 10px;
+            position: absolute;
+            z-index: 1000;
+            bottom: 150%;
+            left: 50%;
+            transform: translateX(-50%);
+            white-space: nowrap;
+            border: 1px solid rgba(166, 92, 255, 0.4);
+            font-size: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.6);
+            pointer-events: none;
+        }
+
+        .team-container:hover .tooltip-name {
+            visibility: visible;
+        }
+
+        /* Modales */
+        #teamsModal, #victoryModal {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(10, 10, 20, 0.85);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease-in-out;
+            backdrop-filter: blur(5px);
+        }
+        #teamsModal.active, #victoryModal.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+        .modal-content, .victory-content {
+            background: linear-gradient(135deg, #1e1e2f, #2d1b4e);
+            border: 2px solid #a65cff;
+            padding: 30px;
+            border-radius: 20px;
+            width: 90%;
+            max-width: 700px;
+            max-height: 80vh;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 0 50px rgba(166, 92, 255, 0.6);
+        }
+        .victory-content {
+            text-align: center;
+            max-width: 500px;
+            transform: scale(0.7);
+            transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        #victoryModal.active .victory-content {
+            transform: scale(1);
+        }
+        .victory-title {
+            font-size: 24px;
+            color: #c38cff;
+            font-weight: 900;
+            text-transform: uppercase;
+            margin-bottom: 10px;
+            letter-spacing: 2px;
+        }
+        .victory-team-name {
+            font-size: 32px;
+            color: #ffffff;
+            font-weight: bold;
+            margin: 15px 0;
+            text-shadow: 0 0 15px rgba(255, 255, 255, 0.5);
+        }
+        .victory-tournament {
+            border-color: gold !important;
+            box-shadow: 0 0 60px rgba(255, 215, 0, 0.7) !important;
+            background: linear-gradient(135deg, #2a2200, #4d3b00) !important;
+        }
+        .victory-tournament .victory-title {
+            color: gold;
+        }
+    </style>
+</head>
+<body>
+
+<!-- Modal de Integrantes -->
+<div id="teamsModal">
+    <div class="modal-content">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+            <h2 style="color: #c38cff; margin:0;">🛡 Equipos e Integrantes</h2>
+            <button class="btn-secondary" onclick="toggleTeamsModal()" style="padding: 5px 12px; cursor: pointer;">✕ Cerrar</button>
+        </div>
+        <div id="teamsModalBody" style="overflow-y: auto; flex: 1; display: flex; flex-direction: column; gap: 10px; padding-right: 5px;"></div>
+    </div>
+</div>
+
+<!-- Modal de Victoria -->
+<div id="victoryModal">
+    <div class="victory-content" id="victoryBoxContent">
+        <div class="victory-title" id="victoryHeaderTitle">¡Ganador del Combate!</div>
+        <div style="font-size: 14px; color: #aaa;">El equipo avanza de fase</div>
+        <div class="victory-team-name" id="victoryTeamNameDisplay">NOMBRE DEL EQUIPO</div>
+    </div>
+</div>
+
+<div class="container">
+    <div class="header">
+        <h1>🏆 Mapa de Trayectoria - Torneo</h1>
+        <div class="nav-links">
+            <button class="btn-primary" onclick="toggleTeamsModal()" style="background: #a65cff; cursor: pointer; border:none; padding:6px 12px; border-radius:6px; color:#fff;">👥 Integrantes</button>
+            <a href="index.html" class="btn btn-secondary">Inicio</a>
+            <a href="stream.html" class="btn btn-secondary">Vista Streamer</a>
+        </div>
+    </div>
+
+    <!-- Contenedor principal maximizado -->
+    <div class="bracket-fullscreen-grid" id="bracketView">
+        <div style="color:#666; text-align:center; width: 100%;">El torneo aún no ha comenzado</div>
+    </div>
+</div>
+
+<script>
+    const SUPABASE_URL = 'https://twxnbbgusthujzdikjeo.supabase.co';
+    const SUPABASE_ANON_KEY = 'sb_publishable_czF-mMgKB69Ox0JtMb24KA_VSw-LGKm';
+    const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    let teams = [];
+    let rounds = [];
+    let matchScores = {};
+    let lastProcessedTimestamp = 0;
+    let victoryTimer = null;
+
+    async function loadPublicData() {
+        let { data, error } = await _supabase.from('tournament_state').select('teams, rounds, match_scores, last_victory').eq('id', 1).single();
+        if (data) {
+            teams = data.teams || [];
+            rounds = data.rounds || [];
+            matchScores = data.match_scores || {};
+            if (data.last_victory && data.last_victory.timestamp > lastProcessedTimestamp) {
+                lastProcessedTimestamp = data.last_victory.timestamp;
+                triggerVictoryModal(data.last_victory.teamName, data.last_victory.isTournamentWinner);
+            }
+            renderPublic();
+        } else if (error) {
+            console.error("Error al cargar datos públicos:", error);
+        }
+    }
+
+    function toggleTeamsModal() {
+        let modal = document.getElementById("teamsModal");
+        modal.classList.toggle("active");
+        if (modal.classList.contains("active")) {
+            renderModalTeams();
+        }
+    }
+
+    function renderModalTeams() {
+        let tView = document.getElementById("teamsModalBody");
+        tView.innerHTML = teams.length === 0 ? `<div style="color:#666; text-align:center;">No hay equipos registrados aún</div>` :
+        teams.map(t => `
+            <div style="background:rgba(122,60,255,0.1); border:1px solid rgba(166,92,255,0.3); border-radius:12px; padding:12px;">
+                <div style="font-weight:bold; color:#c38cff; margin-bottom:8px; font-size: 15px;">${t.name} <span style="background:rgba(195,140,255,0.2); color:#c38cff; padding:2px 6px; border-radius:4px; font-size:11px;">[${t.abbr || '---'}]</span></div>
+                ${t.players.map(p => {
+                    if(p.isPlaceholder) return `<div style="font-size:12px; color:orange; background:rgba(255,165,0,0.05); padding:4px; margin-top:2px; border-radius:4px;">[Espacio libre]</div>`;
+                    return `
+                        <div style="display:flex; justify-content:space-between; align-items:center; font-size:13px; background:rgba(255,255,255,0.03); padding:6px 10px; border-radius:6px; margin-top:4px;">
+                            <div>
+                                <span style="font-weight:bold; color:white;">${p.name}</span>
+                                <div style="font-size:11px; color:#aaa;">ID: ${p.discord_id || 'N/A'}</div>
+                            </div>
+                            <span class="rank-tag">${p.rank}</span>
+                        </div>`;
+                }).join('')}
+            </div>
+        `).join('');
+    }
+
+    function triggerVictoryModal(teamName, isTournamentWinner) {
+        let modal = document.getElementById("victoryModal");
+        let contentBox = document.getElementById("victoryBoxContent");
+        let titleEl = document.getElementById("victoryHeaderTitle");
+        let nameEl = document.getElementById("victoryTeamNameDisplay");
+
+        let cleanName = teamName.replace(/👑\s*CAMPEÓN[:\s]*/gi, "").trim();
+        nameEl.innerText = cleanName;
+
+        if (isTournamentWinner) {
+            contentBox.classList.add("victory-tournament");
+            titleEl.innerHTML = "👑 ¡Campeón del Torneo! 👑";
+        } else {
+            contentBox.classList.remove("victory-tournament");
+            titleEl.innerHTML = "🔥 ¡Ganador del Combate! 🔥";
+        }
+
+        modal.classList.add("active");
+        if (victoryTimer) clearTimeout(victoryTimer);
+        victoryTimer = setTimeout(() => {
+            modal.classList.remove("active");
+        }, 4000);
+    }
+
+    function getTeamAbbr(teamName) {
+        if (!teamName) return "NULL";
+        if (teamName.includes("Descansa")) return "BYE";
+        if (teamName.includes("Por definir")) return "NULL";
+
+        let cleanName = teamName.replace(/👑\s*CAMPEÓN[:\s]*/gi, "").trim();
+        let found = teams.find(t => t.name === cleanName || t.name === teamName);
+        if(found && found.abbr) return found.abbr;
+        if(cleanName.length > 5) return cleanName.substring(0, 3).toUpperCase();
+        return cleanName;
+    }
+
+    function renderPublic() {
+        let bView = document.getElementById("bracketView");
+        if(!rounds || rounds.length === 0 || !rounds[0] || rounds[0].length === 0) {
+            bView.innerHTML = `<div style="color:#666; text-align:center; width:100%;">El torneo aún no ha comenzado</div>`;
+            return;
+        }
+
+        let leftSideHTML = renderSide(rounds[0], 0, "left");
+        let finalHTML = renderFinal();
+        let rightSideHTML = rounds.length > 1 ? renderSide(rounds[1], 1, "right") : "";
+
+        bView.innerHTML = `
+            <div style="display: flex; gap: 20px; align-items: center;">${leftSideHTML}</div>
+            <div style="display: flex; flex-direction: column; align-items: center; padding: 0 15px;">${finalHTML}</div>
+            <div style="display: flex; gap: 20px; align-items: center; flex-direction: row-reverse;">${rightSideHTML}</div>
+        `;
+    }
+
+    function renderSide(sideRounds, sideIndex, sideKey) {
+        if (!sideRounds) return "";
+        return sideRounds.map((rt, ri) => `
+            <div class="round" style="display: flex; flex-direction: column; gap: 20px; justify-content: center; min-width: 240px;">
+                <div style="font-size: 12px; color: #a65cff; font-weight: bold; text-align: center; margin-bottom: 5px; text-transform: uppercase;">${sideKey} - Fase ${ri + 1}</div>
+                ${forPublicMatch(rt, ri, sideKey, sideIndex)}
+            </div>
+        `).join('');
+    }
+
+    function forPublicMatch(rt, ri, sideKey, sideIndex) {
+        let html = "";
+        let matchCounter = 0;
+        for(let i=0; i<rt.length; i+=2) {
+            let t1 = rt[i] || "";
+            let t2 = rt[i+1] || "";
+            let mIndex = matchCounter++;
+            let key = `${sideKey}_r${ri}_m${mIndex}`;
+            let scores = matchScores[key] || { score1: 0, score2: 0 };
+
+            let abbr1 = getTeamAbbr(t1);
+            let abbr2 = getTeamAbbr(t2);
+
+            let isSpecial1 = (t1.includes("Descansa") || t1.includes("Por definir") || !t1);
+            let isSpecial2 = (t2.includes("Descansa") || t2.includes("Por definir") || !t2);
+
+            let display1 = isSpecial1 ? t1 : abbr1;
+            let display2 = isSpecial2 ? t2 : abbr2;
+
+            let winnerTag = "";
+            let isTeam1Advanced = false;
+            let isTeam2Advanced = false;
+
+            if (!isSpecial1 && t1) {
+                let checkRounds = sideIndex === 0 ? rounds[0] : rounds[1];
+                if (checkRounds) {
+                    for (let r = ri + 1; r < checkRounds.length; r++) {
+                        if (checkRounds[r] && checkRounds[r].includes(t1)) {
+                            isTeam1Advanced = true;
+                            break;
+                        }
+                    }
+                }
+                if (rounds[2] && rounds[2][0] && rounds[2][0].includes(t1)) isTeam1Advanced = true;
+            }
+
+            if (!isSpecial2 && t2) {
+                let checkRounds = sideIndex === 0 ? rounds[0] : rounds[1];
+                if (checkRounds) {
+                    for (let r = ri + 1; r < checkRounds.length; r++) {
+                        if (checkRounds[r] && checkRounds[r].includes(t2)) {
+                            isTeam2Advanced = true;
+                            break;
+                        }
+                    }
+                }
+                if (rounds[2] && rounds[2][0] && rounds[2][0].includes(t2)) isTeam2Advanced = true;
+            }
+
+            if (scores.score1 > scores.score2 || isTeam1Advanced) {
+                winnerTag = `<div class="winner-tag-bracket left">GANA</div>`;
+            } else if (scores.score2 > scores.score1 || isTeam2Advanced) {
+                winnerTag = `<div class="winner-tag-bracket right">GANA</div>`;
+            }
+
+            html += `
+                <div class="esports-match">
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <div class="team-container">
+                            <span class="esports-team">${display1}</span>
+                            ${!isSpecial1 ? `<span class="tooltip-name">${t1}</span>` : ''}
+                        </div>
+                        <span class="esports-score">${scores.score1}</span>
+                    </div>
+                    <span style="font-size:11px; color:#8888aa; font-weight:bold;">VS</span>
+                    <div style="display: flex; align-items: center; gap: 8px; flex-direction: row-reverse;">
+                        <div class="team-container">
+                            <span class="esports-team">${display2}</span>
+                            ${!isSpecial2 ? `<span class="tooltip-name">${t2}</span>` : ''}
+                        </div>
+                        <span class="esports-score">${scores.score2}</span>
+                    </div>
+                    ${winnerTag}
+                </div>
+            `;
+        }
+        return html;
+    }
+
+    function renderFinal() {
+        if(!rounds[2] || !rounds[2][0]) return `<div style="font-size:12px; color:#777;">Gran Final Pendiente</div>`;
+        let finalMatch = rounds[2][0];
+        let t1 = finalMatch[0] || "";
+        let t2 = finalMatch[1] || "";
+
+        let key = `final_r0_m0`;
+        let scores = matchScores[key] || { score1: 0, score2: 0 };
+
+        // Limpiar indicadores de campeón previos para manejar la visualización limpia
+        let rawT1 = t1.replace(/👑\s*CAMPEÓN[:\s]*/gi, "").trim();
+        let rawT2 = t2.replace(/👑\s*CAMPEÓN[:\s]*/gi, "").trim();
+
+        let abbr1 = getTeamAbbr(rawT1);
+        let abbr2 = getTeamAbbr(rawT2);
+
+        let isSpecial1 = (!rawT1 || rawT1 === "NULL" || rawT1.includes("Por definir"));
+        let isSpecial2 = (!rawT2 || rawT2 === "NULL" || rawT2.includes("Por definir"));
+
+        let display1 = isSpecial1 ? "Por definir" : abbr1;
+        let display2 = isSpecial2 ? "Por definir" : abbr2;
+
+        let winnerTag = "";
+        // Corrección de la lógica de campeón para la Gran Final
+        if (t1.includes("CAMPEÓN") || (scores.score1 > scores.score2 && !isSpecial1 && scores.score1 > 0)) {
+            winnerTag = `<div class="winner-tag-bracket left" style="background: gold; color: #000;">CAMPEÓN</div>`;
+        } else if (t2.includes("CAMPEÓN") || (scores.score2 > scores.score1 && !isSpecial2 && scores.score2 > 0)) {
+            winnerTag = `<div class="winner-tag-bracket right" style="background: gold; color: #000;">CAMPEÓN</div>`;
+        } else if (scores.score1 > scores.score2) {
+            winnerTag = `<div class="winner-tag-bracket left">GANA</div>`;
+        } else if (scores.score2 > scores.score1) {
+            winnerTag = `<div class="winner-tag-bracket right">GANA</div>`;
+        }
+
+        return `
+            <div style="font-size: 12px; color: gold; font-weight: bold; margin-bottom: 8px; text-align: center; text-transform: uppercase;">🏆 Gran Final</div>
+            <div class="esports-match" style="border-color: rgba(255, 215, 0, 0.4); width: 260px;">
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <div class="team-container">
+                        <span class="esports-team">${display1}</span>
+                        ${!isSpecial1 ? `<span class="tooltip-name">${rawT1}</span>` : ''}
+                    </div>
+                    <span class="esports-score">${scores.score1}</span>
+                </div>
+                <span style="font-size:11px; color:gold; font-weight:bold;">VS</span>
+                <div style="display: flex; align-items: center; gap: 8px; flex-direction: row-reverse;">
+                    <div class="team-container">
+                        <span class="esports-team">${display2}</span>
+                        ${!isSpecial2 ? `<span class="tooltip-name">${rawT2}</span>` : ''}
+                    </div>
+                    <span class="esports-score">${scores.score2}</span>
+                </div>
+                ${winnerTag}
+            </div>
+        `;
+    }
+
+    loadPublicData();
+
+    _supabase
+      .channel('public:tournament_state_live')
+      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'tournament_state' }, payload => {
+          if (payload.new) {
+              teams = payload.new.teams || [];
+              rounds = payload.new.rounds || [];
+              matchScores = payload.new.match_scores || {};
+              if (payload.new.last_victory && payload.new.last_victory.timestamp > lastProcessedTimestamp) {
+                  lastProcessedTimestamp = payload.new.last_victory.timestamp;
+                  triggerVictoryModal(payload.new.last_victory.teamName, payload.new.last_victory.isTournamentWinner);
+              }
+              renderPublic();
+              if(document.getElementById("teamsModal").classList.contains("active")) {
+                  renderModalTeams();
+              }
+          }
+      })
+      .subscribe();
+</script>
+
+</body>
+</html>
