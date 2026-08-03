@@ -6,103 +6,175 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Panel de Administración - Torneo</title>
     <link rel="stylesheet" href="style.css">
-    <style>
-        .admin-grid { display: grid; grid-template-columns: 350px 420px 1fr; gap: 20px; flex: 1; }
-        input, select { background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.15); border-radius: 12px; padding: 10px; color: white; font-size: 15px; outline: none; }
-        .form-group { display: flex; flex-direction: column; gap: 5px; }
-        label { font-size: 13px; color: #bbbbbb; }
-        .team-card { background: rgba(122, 60, 255, 0.1); border: 1px solid rgba(166, 92, 255, 0.3); border-radius: 14px; padding: 12px; margin-bottom: 10px; }
-        .team-title { font-size: 16px; font-weight: bold; color: #c38cff; margin-bottom: 6px; cursor: pointer; }
-        .team-player { display: flex; justify-content: space-between; align-items: center; background: rgba(255, 255, 255, 0.04); padding: 5px 8px; border-radius: 6px; margin-top: 4px; font-size: 13px; }
-        .match-team { cursor: pointer; position: relative; }
-        .match-team:hover { background: rgba(122, 60, 255, 0.4); }
-        .winner-score { color: #2ecc71 !important; font-weight: bold; }
-
-        .match-team .tooltip-name {
-            visibility: hidden;
-            background-color: #181824;
-            color: #c38cff;
-            text-align: center;
-            border-radius: 6px;
-            padding: 4px 8px;
-            position: absolute;
-            z-index: 10;
-            bottom: 125%;
-            left: 50%;
-            transform: translateX(-50%);
-            white-space: nowrap;
-            border: 1px solid rgba(166, 92, 255, 0.4);
-            font-size: 12px;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
-        }
-        .match-team:hover .tooltip-name {
-            visibility: visible;
-        }
-
-        #victoryModal {
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(10, 10, 20, 0.85);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            z-index: 9999;
-            opacity: 0;
-            pointer-events: none;
-            transition: opacity 0.3s ease-in-out;
-            backdrop-filter: blur(5px);
-        }
-        #victoryModal.active {
-            opacity: 1;
-            pointer-events: auto;
-        }
-        .victory-content {
-            background: linear-gradient(135deg, #1e1e2f, #2d1b4e);
-            border: 2px solid #a65cff;
-            padding: 40px;
-            border-radius: 20px;
-            text-align: center;
-            box-shadow: 0 0 50px rgba(166, 92, 255, 0.6);
-            transform: scale(0.7);
-            transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            max-width: 500px;
-        }
-        #victoryModal.active .victory-content {
-            transform: scale(1);
-        }
-        .victory-title {
-            font-size: 24px;
-            color: #c38cff;
-            font-weight: 900;
-            text-transform: uppercase;
-            margin-bottom: 10px;
-            letter-spacing: 2px;
-        }
-        .victory-team-name {
-            font-size: 32px;
-            color: #ffffff;
-            font-weight: bold;
-            margin: 15px 0;
-            text-shadow: 0 0 15px rgba(255, 255, 255, 0.5);
-        }
-        .victory-tournament {
-            border-color: gold !important;
-            box-shadow: 0 0 60px rgba(255, 215, 0, 0.7) !important;
-            background: linear-gradient(135deg, #2a2200, #4d3b00) !important;
-        }
-        .victory-tournament .victory-title {
-            color: gold;
-        }
-    </style>
 </head>
 <body>
 
 <div id="victoryModal">
     <div class="victory-content" id="victoryBoxContent">
-        <div class="victory-title" id="victoryHeaderTitle">¡Ganador del Combate!</div>
-        <div style="font-size: 14px; color: #aaa;">El equipo avanza de fase</div>
+        <div class="victory-title" id="victoryHeaderTitle">¡Ganador del Torneo!</div>
+        <div style="font-size: 14px; color: #aaa;">El equipo se ha coronado campeón</div>
         <div class="victory-team-name" id="victoryTeamNameDisplay">NOMBRE DEL EQUIPO</div>
-        <button class="btn-primary" onclick="closeVictoryModal()" style="margin-top: 15px; background: #6c5ce7;">¡Continuar!</button>
+        <button class="btn-primary" onclick="closeVictoryModal()" style="margin-top: 15px; background: #6c5ce7;">¡Perfecto!</button>
+    </div>
+</div>
+
+<!-- Modal Flotante de Edición de Equipo -->
+<div id="editTeamModal" class="custom-team-builder">
+    <div class="custom-team-box" style="max-width: 450px;">
+        <h3 style="color: #c38cff; font-size: 18px; margin-bottom: 12px; text-align: center;">✏️ Editar Información del Equipo</h3>
+        <div class="form-group" style="margin-bottom: 12px;">
+            <label>Nuevo Nombre del Equipo:</label>
+            <input type="text" id="editTeamNameInput" placeholder="Ej. Los Inmortales">
+        </div>
+        <div class="form-group" style="margin-bottom: 16px;">
+            <label>Nueva Abreviatura (ej: T1, KINGS):</label>
+            <input type="text" id="editTeamAbbrInput" placeholder="Ej. INS">
+        </div>
+        <div style="display: flex; gap: 10px;">
+            <button class="btn-primary" style="background: #27ae60; flex: 1; padding: 10px; font-weight: bold; cursor: pointer;" onclick="saveTeamInfoEdition()">Guardar Cambios</button>
+            <button class="btn-secondary" style="background: #e74c3c; flex: 1; padding: 10px; font-weight: bold; cursor: pointer;" onclick="closeEditTeamModal()">Cancelar</button>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Flotante de Sustitución / Jugador Nuevo -->
+<div id="replacePlayerModal" class="custom-team-builder">
+    <div class="custom-team-box" style="max-width: 450px;">
+        <h3 style="color: #f39c12; font-size: 18px; margin-bottom: 12px; text-align: center;">👤 Integrante del Equipo</h3>
+        <div class="form-group" style="margin-bottom: 10px;">
+            <label>Nombre del Participante:</label>
+            <input type="text" id="modalPlayerName" placeholder="Ej. Juan">
+        </div>
+        <div class="form-group" style="margin-bottom: 10px;">
+            <label>Battle.net ID:</label>
+            <input type="text" id="modalPlayerBnet" placeholder="Ej. Juan#1234">
+        </div>
+        <div class="form-group" style="margin-bottom: 10px;">
+            <label>Discord ID:</label>
+            <input type="text" id="modalPlayerDiscord" placeholder="Ej. juan#0001">
+        </div>
+        <div class="form-group" style="margin-bottom: 16px;">
+            <label>Rango:</label>
+            <select id="modalPlayerRank">
+                <option value="bronze">Bronze</option><option value="silver">Silver</option><option value="gold" selected>Gold</option>
+                <option value="platinum">Platinum</option><option value="diamond">Diamond</option><option value="master">Master</option>
+                <option value="grandmaster">Grandmaster</option><option value="champion">Champion</option><option value="top 500">Top 500</option>
+            </select>
+        </div>
+        <div style="display: flex; gap: 10px;">
+            <button class="btn-primary" style="background: #27ae60; flex: 1; padding: 10px; font-weight: bold; cursor: pointer;" onclick="saveReplacementPlayer()">Guardar Integrante</button>
+            <button class="btn-secondary" style="background: #e74c3c; flex: 1; padding: 10px; font-weight: bold; cursor: pointer;" onclick="closeReplacePlayerModal()">Cancelar</button>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Flotante de Confirmación Personalizada (Eliminar Jugador / Limpiar Todo) -->
+<div id="customConfirmModal" class="custom-team-builder">
+    <div class="custom-team-box" style="max-width: 400px; text-align: center;">
+        <h3 id="confirmTitle" style="color: #e74c3c; font-size: 18px; margin-bottom: 12px;">⚠️ Confirmar Acción</h3>
+        <p id="confirmMessage" style="color: #ddd; font-size: 14px; margin-bottom: 20px; line-height: 1.4;"></p>
+        <div style="display: flex; gap: 10px;">
+            <button id="confirmYesBtn" class="btn-primary" style="background: #e74c3c; flex: 1; padding: 10px; font-weight: bold; cursor: pointer;">Sí, Eliminar</button>
+            <button class="btn-secondary" style="background: #6c5ce7; flex: 1; padding: 10px; font-weight: bold; cursor: pointer;" onclick="closeCustomConfirm()">Cancelar</button>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Flotante de Equipo Personalizado -->
+<div id="customTeamBuilder" class="custom-team-builder">
+    <div class="custom-team-box">
+        <h3 style="color: #2ecc71; font-size: 18px; margin-bottom: 12px; text-align: center;">⭐ Crear Equipo Manual con Nuevos Integrantes</h3>
+
+        <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 10px; margin-bottom: 14px;">
+            <div class="form-group">
+                <label>Nombre del Equipo:</label>
+                <input type="text" id="customTeamName" placeholder="Ej. Los Inmortales">
+            </div>
+            <div class="form-group">
+                <label>Abreviatura:</label>
+                <input type="text" id="customTeamAbbr" placeholder="Ej. INS">
+            </div>
+        </div>
+
+        <label style="margin-bottom: 8px; display: block; color: #2ecc71; font-weight: bold;">Agrega los 5 participantes:</label>
+
+        <div style="display: flex; flex-direction: column; gap: 6px; margin-bottom: 16px;" id="customSlotsContainer">
+            <!-- Slot 1 -->
+            <div class="slot-row">
+                <span style="font-size: 12px; color: #2ecc71; font-weight: bold;">1- Participante</span>
+                <div class="slot-inputs">
+                    <input type="text" class="slot-name" placeholder="Nombre">
+                    <input type="text" class="slot-bnet" placeholder="Battle.net">
+                    <input type="text" class="slot-discord" placeholder="Discord ID">
+                    <select class="slot-rank">
+                        <option value="bronze">Bronze</option><option value="silver">Silver</option><option value="gold" selected>Gold</option>
+                        <option value="platinum">Platinum</option><option value="diamond">Diamond</option><option value="master">Master</option>
+                        <option value="grandmaster">Grandmaster</option><option value="champion">Champion</option><option value="top 500">Top 500</option>
+                    </select>
+                </div>
+            </div>
+            <!-- Slot 2 -->
+            <div class="slot-row">
+                <span style="font-size: 12px; color: #2ecc71; font-weight: bold;">2- Participante</span>
+                <div class="slot-inputs">
+                    <input type="text" class="slot-name" placeholder="Nombre">
+                    <input type="text" class="slot-bnet" placeholder="Battle.net">
+                    <input type="text" class="slot-discord" placeholder="Discord ID">
+                    <select class="slot-rank">
+                        <option value="bronze">Bronze</option><option value="silver">Silver</option><option value="gold" selected>Gold</option>
+                        <option value="platinum">Platinum</option><option value="diamond">Diamond</option><option value="master">Master</option>
+                        <option value="grandmaster">Grandmaster</option><option value="champion">Champion</option><option value="top 500">Top 500</option>
+                    </select>
+                </div>
+            </div>
+            <!-- Slot 3 -->
+            <div class="slot-row">
+                <span style="font-size: 12px; color: #2ecc71; font-weight: bold;">3- Participante</span>
+                <div class="slot-inputs">
+                    <input type="text" class="slot-name" placeholder="Nombre">
+                    <input type="text" class="slot-bnet" placeholder="Battle.net">
+                    <input type="text" class="slot-discord" placeholder="Discord ID">
+                    <select class="slot-rank">
+                        <option value="bronze">Bronze</option><option value="silver">Silver</option><option value="gold" selected>Gold</option>
+                        <option value="platinum">Platinum</option><option value="diamond">Diamond</option><option value="master">Master</option>
+                        <option value="grandmaster">Grandmaster</option><option value="champion">Champion</option><option value="top 500">Top 500</option>
+                    </select>
+                </div>
+            </div>
+            <!-- Slot 4 -->
+            <div class="slot-row">
+                <span style="font-size: 12px; color: #2ecc71; font-weight: bold;">4- Participante</span>
+                <div class="slot-inputs">
+                    <input type="text" class="slot-name" placeholder="Nombre">
+                    <input type="text" class="slot-bnet" placeholder="Battle.net">
+                    <input type="text" class="slot-discord" placeholder="Discord ID">
+                    <select class="slot-rank">
+                        <option value="bronze">Bronze</option><option value="silver">Silver</option><option value="gold" selected>Gold</option>
+                        <option value="platinum">Platinum</option><option value="diamond">Diamond</option><option value="master">Master</option>
+                        <option value="grandmaster">Grandmaster</option><option value="champion">Champion</option><option value="top 500">Top 500</option>
+                    </select>
+                </div>
+            </div>
+            <!-- Slot 5 -->
+            <div class="slot-row">
+                <span style="font-size: 12px; color: #2ecc71; font-weight: bold;">5- Participante</span>
+                <div class="slot-inputs">
+                    <input type="text" class="slot-name" placeholder="Nombre">
+                    <input type="text" class="slot-bnet" placeholder="Battle.net">
+                    <input type="text" class="slot-discord" placeholder="Discord ID">
+                    <select class="slot-rank">
+                        <option value="bronze">Bronze</option><option value="silver">Silver</option><option value="gold" selected>Gold</option>
+                        <option value="platinum">Platinum</option><option value="diamond">Diamond</option><option value="master">Master</option>
+                        <option value="grandmaster">Grandmaster</option><option value="champion">Champion</option><option value="top 500">Top 500</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <div style="display: flex; gap: 10px;">
+            <button class="btn-primary" style="background: #27ae60; flex: 1; padding: 10px; font-weight: bold; cursor: pointer;" onclick="saveCustomTeam()">Guardar Equipo</button>
+            <button class="btn-secondary" style="background: #e74c3c; flex: 1; padding: 10px; font-weight: bold; cursor: pointer;" onclick="toggleCustomTeamBuilder()">Cancelar</button>
+        </div>
     </div>
 </div>
 
@@ -120,7 +192,8 @@
             <h2>📝 Inscripciones</h2>
             <div style="font-size:14px; color:#b8ffb8;">Total inscritos: <span id="playerCounter">0</span></div>
             <div class="form-group"><label>Nombre:</label><input type="text" id="inputName" placeholder="Ej. Juan"></div>
-            <div class="form-group"><label>ID (Battle.net / Discord):</label><input type="text" id="inputDiscordId" placeholder="Ej. Juan#1234"></div>
+            <div class="form-group"><label>Battle.net ID:</label><input type="text" id="inputBnetId" placeholder="Ej. Juan#1234"></div>
+            <div class="form-group"><label>Discord ID:</label><input type="text" id="inputDiscordId" placeholder="Ej. juan#0001 o @usuario"></div>
             <div class="form-group">
                 <label>Rango:</label>
                 <select id="inputRank">
@@ -130,14 +203,16 @@
                 </select>
             </div>
             <button class="btn-primary" onclick="addPlayer()">➕ Añadir al Roster</button>
-            <button class="btn-secondary" onclick="clearRoster()">🗑 Limpiar Todo</button>
-            <div id="rosterList" style="overflow-y:auto; max-height:200px; display:flex; flex-direction:column; gap:5px;"></div>
+            <button class="btn-secondary" onclick="confirmClearRoster()">🗑 Limpiar Todo</button>
+            <div id="rosterList" style="overflow-y:auto; max-height:220px; display:flex; flex-direction:column; gap:5px; margin-top: 10px;"></div>
         </div>
 
         <div class="panel">
             <h2>🛡 Equipos (5v5)</h2>
             <button class="btn-primary" onclick="generateTeams()">🎲 Sortear y Balancear Equipos</button>
-            <div id="teamsContainer" style="overflow-y:auto; flex:1;">
+            <button class="btn-secondary" onclick="toggleCustomTeamBuilder()" style="margin-top: 8px; background: #27ae60; width: 100%;">⭐ Añadir Team Personalizado</button>
+
+            <div id="teamsContainer" style="overflow-y:auto; flex:1; margin-top: 10px;">
                 <div style="color: #666; text-align:center; padding: 20px;">Sin equipos generados</div>
             </div>
         </div>
@@ -145,7 +220,7 @@
         <div class="panel">
             <h2>🏆 Control de Trayectoria</h2>
             <button class="btn-primary" onclick="startTournament()">▶ Generar / Reiniciar Bracket</button>
-            <div class="bracket-wrapper" id="bracketContainer" style="overflow-y:auto; flex:1; display: flex; gap: 20px; align-items: center; justify-content: center;">
+            <div class="bracket-wrapper" id="bracketContainer" style="overflow-y:auto; flex:1; display: flex; gap: 15px; align-items: center; justify-content: center;">
                 <div style="color: #666; text-align:center;">Inicia el torneo para ver el bracket</div>
             </div>
         </div>
@@ -170,31 +245,58 @@
     let matchScores = {};
     let activeMatchData = null;
     let lastVictoryData = null;
+    let championBox = null;
+
+    let currentEditingTeamIndex = null;
+    let currentReplaceTarget = { teamIndex: null, playerIndex: null };
 
     async function loadDataFromDB() {
-        let { data: playerData } = await _supabase.from('players').select('*');
-        if (playerData) players = playerData;
+        try {
+            let { data: playerData, error: playerError } = await _supabase.from('players').select('*');
+            if (!playerError && playerData) players = playerData;
 
-        let { data: stateData } = await _supabase.from('tournament_state').select('teams, rounds, match_scores, active_match, last_victory').eq('id', 1).single();
-        if (stateData) {
-            teams = stateData.teams || [];
-            rounds = stateData.rounds || [];
-            matchScores = stateData.match_scores || {};
-            activeMatchData = stateData.active_match || null;
-            lastVictoryData = stateData.last_victory || null;
+            let { data: stateData, error: stateError } = await _supabase.from('tournament_state').select('*').eq('id', 1).maybeSingle();
+
+            if (stateError) {
+                console.warn("No se pudo cargar el estado:", stateError);
+            }
+
+            if (stateData) {
+                teams = stateData.teams || [];
+                rounds = stateData.rounds || [];
+                matchScores = stateData.match_scores || {};
+                activeMatchData = stateData.active_match || null;
+                lastVictoryData = stateData.last_victory || null;
+                championBox = stateData.champion_box !== undefined ? stateData.champion_box : null;
+            } else {
+                await _supabase.from('tournament_state').upsert([{
+                    id: 1,
+                    teams: [],
+                    rounds: [],
+                    match_scores: {},
+                    active_match: null,
+                    last_victory: null,
+                    champion_box: null
+                }]);
+            }
+        } catch (e) {
+            console.error("Excepción al conectar con Supabase:", e);
+        } finally {
+            renderAll();
         }
-        renderAll();
     }
 
     async function saveTournamentStateDB() {
         let payload = {
+            id: 1,
             teams: teams,
             rounds: rounds,
             match_scores: matchScores,
             active_match: activeMatchData,
-            last_victory: lastVictoryData
+            last_victory: lastVictoryData,
+            champion_box: championBox
         };
-        let { error } = await _supabase.from('tournament_state').update(payload).eq('id', 1);
+        let { error } = await _supabase.from('tournament_state').upsert(payload);
         if(error) console.error("Error al guardar en Supabase:", error);
     }
 
@@ -205,16 +307,24 @@
 
     async function addPlayer() {
         let name = document.getElementById("inputName").value.trim();
+        let bnetId = document.getElementById("inputBnetId").value.trim();
         let discordId = document.getElementById("inputDiscordId").value.trim();
         let rank = document.getElementById("inputRank").value;
         if(!name) return alert("Escribe un nombre.");
 
-        let newPlayer = { name, discord_id: discordId || "N/A", rank, value: rankValues[rank] };
+        let newPlayer = {
+            name,
+            bnet_id: bnetId || "N/A",
+            discord_id: discordId || "N/A",
+            rank,
+            value: rankValues[rank]
+        };
         let { data, error } = await _supabase.from('players').insert([newPlayer]).select();
         if(error) { alert("Error al guardar en Supabase"); return; }
 
         if(data) players.push(data[0]);
         document.getElementById("inputName").value = "";
+        document.getElementById("inputBnetId").value = "";
         document.getElementById("inputDiscordId").value = "";
         renderAll();
     }
@@ -226,44 +336,173 @@
         renderAll();
     }
 
-    async function clearRoster() {
-        if(confirm("¿Vaciar todo?")) {
-            players = []; teams = []; rounds = []; matchScores = {}; activeMatchData = null; lastVictoryData = null;
-            await _supabase.from('players').delete().neq('id', 0);
+    function closeCustomConfirm() {
+        document.getElementById("customConfirmModal").classList.remove("active");
+    }
+
+    function confirmClearRoster() {
+        let titleEl = document.getElementById("confirmTitle");
+        let msgEl = document.getElementById("confirmMessage");
+        let yesBtn = document.getElementById("confirmYesBtn");
+
+        titleEl.innerText = "🗑️ ¿Vaciar Todo el Torneo?";
+        msgEl.innerText = "Se eliminarán todos los jugadores, equipos y se reiniciará por completo el estado del torneo en la base de datos.";
+        yesBtn.onclick = async function() {
+            players = []; teams = []; rounds = []; matchScores = {}; activeMatchData = null; lastVictoryData = null; championBox = null;
+            await _supabase.from('players').delete().not('id', 'is', null);
             await saveTournamentStateDB();
+            closeCustomConfirm();
             renderAll();
+        };
+
+        document.getElementById("customConfirmModal").classList.add("active");
+    }
+
+    function toggleCustomTeamBuilder() {
+        let builder = document.getElementById("customTeamBuilder");
+        builder.classList.toggle("active");
+        if(builder.classList.contains("active")) {
+            document.getElementById("customTeamName").value = "";
+            document.getElementById("customTeamAbbr").value = "";
+
+            let nameInputs = document.querySelectorAll(".slot-name");
+            let bnetInputs = document.querySelectorAll(".slot-bnet");
+            let discordInputs = document.querySelectorAll(".slot-discord");
+            let rankSelects = document.querySelectorAll(".slot-rank");
+            for(let i = 0; i < 5; i++) {
+                if(nameInputs[i]) nameInputs[i].value = "";
+                if(bnetInputs[i]) bnetInputs[i].value = "";
+                if(discordInputs[i]) discordInputs[i].value = "";
+                if(rankSelects[i]) rankSelects[i].value = "gold";
+            }
         }
     }
 
-    async function generateTeams() {
-        if(players.length < 5) return alert("Se necesitan al menos 5 jugadores.");
-        let sorted = [...players].sort((a,b) => b.value - a.value);
-        let numTeams = Math.ceil(sorted.length / 5);
-        teams = [];
-        for(let i=0; i<numTeams; i++) {
-            let defaultName = `Equipo ${i+1}`;
-            let defaultAbbr = `EQ${i+1}`;
-            teams.push({ id: i+1, name: defaultName, abbr: defaultAbbr, players: [] });
+    async function saveCustomTeam() {
+        let teamName = document.getElementById("customTeamName").value.trim();
+        if(!teamName) return alert("Escribe un nombre para el equipo.");
+
+        let abbrInput = document.getElementById("customTeamAbbr").value.trim();
+        let teamAbbr = abbrInput ? abbrInput.toUpperCase() : teamName.substring(0,3).toUpperCase();
+
+        let nameInputs = document.querySelectorAll(".slot-name");
+        let bnetInputs = document.querySelectorAll(".slot-bnet");
+        let discordInputs = document.querySelectorAll(".slot-discord");
+        let rankSelects = document.querySelectorAll(".slot-rank");
+
+        let selectedPlayers = [];
+        let newPlayersToInsert = [];
+
+        for(let i = 0; i < 5; i++) {
+            let pName = nameInputs[i].value.trim();
+            if(!pName) return alert(`El participante #${i+1} necesita un nombre.`);
+            let pBnet = bnetInputs[i].value.trim() || "N/A";
+            let pDiscord = discordInputs[i].value.trim() || "N/A";
+            let pRank = rankSelects[i].value;
+
+            let playerObj = {
+                name: pName,
+                bnet_id: pBnet,
+                discord_id: pDiscord,
+                rank: pRank,
+                value: rankValues[pRank],
+                custom_team: teamName
+            };
+            newPlayersToInsert.push(playerObj);
+            selectedPlayers.push(playerObj);
         }
 
-        let cur = 0, dir = 1;
-        sorted.forEach(p => {
-            teams[cur].players.push(p);
-            cur += dir;
-            if(cur >= numTeams || cur < 0) { dir *= -1; cur += dir; }
+        let { data, error } = await _supabase.from('players').insert(newPlayersToInsert).select();
+        if(error) {
+            console.error("Error al registrar jugadores:", error);
+            alert("Error al guardar los jugadores en la base de datos.");
+            return;
+        }
+
+        if(data) {
+            data.forEach(dbPlayer => players.push(dbPlayer));
+        }
+
+        let newTeamObj = {
+            id: teams.length + 1,
+            name: teamName,
+            abbr: teamAbbr,
+            players: selectedPlayers,
+            isCustom: true
+        };
+
+        teams.push(newTeamObj);
+        await saveTournamentStateDB();
+        toggleCustomTeamBuilder();
+        renderAll();
+        alert(`¡Equipo "${teamName}" creado con éxito con sus 5 integrantes!`);
+    }
+
+    async function generateTeams() {
+        if(players.length < 5) return alert("Se necesitan al menos 5 jugadores en total.");
+
+        let customTeamsList = teams.filter(t => t.isCustom);
+        let assignedPlayerIds = new Set();
+        customTeamsList.forEach(t => {
+            t.players.forEach(p => {
+                if(p.id) assignedPlayerIds.add(p.id);
+                else assignedPlayerIds.add(p.name);
+            });
         });
+
+        let freePlayers = players.filter(p => {
+            let identifier = p.id || p.name;
+            return !assignedPlayerIds.has(identifier);
+        });
+
+        let sortedFree = [...freePlayers].sort((a,b) => b.value - a.value);
+        let numExtraTeams = Math.ceil(sortedFree.length / 5);
+
+        teams = [...customTeamsList];
+
+        let startId = teams.length + 1;
+        let tempFreeTeams = [];
+        for(let i=0; i<numExtraTeams; i++) {
+            tempFreeTeams.push({ id: startId + i, name: `Equipo ${startId + i}`, abbr: `EQ${startId + i}`, players: [] });
+        }
+
+        if(tempFreeTeams.length > 0) {
+            let cur = 0, dir = 1;
+            sortedFree.forEach(p => {
+                tempFreeTeams[cur].players.push(p);
+                cur += dir;
+                if(cur >= tempFreeTeams.length || cur < 0) { dir *= -1; cur += dir; }
+            });
+            teams = teams.concat(tempFreeTeams);
+        }
+
         await saveTournamentStateDB();
         renderAll();
     }
 
-    async function editTeamInfo(ti) {
+    function openEditTeamModal(ti) {
+        currentEditingTeamIndex = ti;
         let currentTeam = teams[ti];
-        let newName = prompt("Nuevo nombre del equipo:", currentTeam.name);
-        if(!newName) return;
+        document.getElementById("editTeamNameInput").value = currentTeam.name;
+        document.getElementById("editTeamAbbrInput").value = currentTeam.abbr || currentTeam.name.substring(0,3).toUpperCase();
+        document.getElementById("editTeamModal").classList.add("active");
+    }
 
-        let newAbbr = prompt("Nueva abreviatura (ej: T1, KINGS):", currentTeam.abbr || newName.substring(0,3).toUpperCase());
+    function closeEditTeamModal() {
+        document.getElementById("editTeamModal").classList.remove("active");
+        currentEditingTeamIndex = null;
+    }
+
+    async function saveTeamInfoEdition() {
+        if (currentEditingTeamIndex === null) return;
+        let currentTeam = teams[currentEditingTeamIndex];
+
+        let newName = document.getElementById("editTeamNameInput").value.trim();
+        if(!newName) return alert("Escribe un nombre para el equipo.");
+
+        let newAbbr = document.getElementById("editTeamAbbrInput").value.trim();
         if(!newAbbr) newAbbr = newName.substring(0,3).toUpperCase();
-        newAbbr = newAbbr.trim().toUpperCase();
+        newAbbr = newAbbr.toUpperCase();
 
         let oldName = currentTeam.name;
         currentTeam.name = newName;
@@ -273,42 +512,74 @@
             if (sIdx === 2) {
                 return side.map(roundArr => roundArr.map(teamName => {
                     if (!teamName) return teamName;
-                    if (teamName.includes("👑 CAMPEÓN")) {
-                        return teamName.includes(oldName) ? `👑 CAMPEÓN: ${newName}` : teamName;
-                    }
                     return teamName === oldName ? newName : teamName;
                 }));
             }
             return side.map(roundArr => roundArr.map(teamName => teamName === oldName ? newName : teamName));
         });
 
+        if(championBox === oldName) championBox = newName;
+
         await saveTournamentStateDB();
+        closeEditTeamModal();
         renderAll();
     }
 
-    async function removePlayerFromTeam(teamIndex, playerIndex) {
+    function removePlayerFromTeam(teamIndex, playerIndex) {
         let player = teams[teamIndex].players[playerIndex];
-        if(confirm(`¿Deseas eliminar a ${player.name} y dejar el espacio libre?`)) {
+        let titleEl = document.getElementById("confirmTitle");
+        let msgEl = document.getElementById("confirmMessage");
+        let yesBtn = document.getElementById("confirmYesBtn");
+
+        titleEl.innerText = "👤 ¿Quitar Integrante?";
+        msgEl.innerText = `¿Deseas eliminar a ${player.name} del equipo y dejar el espacio libre?`;
+        yesBtn.onclick = async function() {
             if(player.id) {
                 await _supabase.from('players').delete().eq('id', player.id);
                 players = players.filter(p => p.id !== player.id);
             } else {
                 players = players.filter(p => p.name !== player.name);
             }
-            teams[teamIndex].players[playerIndex] = { name: "⚠️ [Espacio Libre]", discord_id: "N/A", rank: "N/A", isPlaceholder: true };
+            teams[teamIndex].players[playerIndex] = { name: "⚠️ [Espacio Libre]", bnet_id: "N/A", discord_id: "N/A", rank: "N/A", isPlaceholder: true };
             await saveTournamentStateDB();
+            closeCustomConfirm();
             renderAll();
-        }
+        };
+
+        document.getElementById("customConfirmModal").classList.add("active");
     }
 
-    async function replacePlaceholderPlayer(teamIndex, playerIndex) {
-        let newName = prompt("Nombre del jugador sustituto:");
-        if(!newName) return;
-        let newDiscordId = prompt("ID de Battle.net o Discord:", "Ej: User#1234");
-        let newRank = prompt("Rango (bronze, silver, gold, platinum, diamond, master, grandmaster, champion, top 500):", "gold");
+    function openReplacePlayerModal(teamIndex, playerIndex) {
+        currentReplaceTarget = { teamIndex, playerIndex };
+        document.getElementById("modalPlayerName").value = "";
+        document.getElementById("modalPlayerBnet").value = "";
+        document.getElementById("modalPlayerDiscord").value = "";
+        document.getElementById("modalPlayerRank").value = "gold";
+        document.getElementById("replacePlayerModal").classList.add("active");
+    }
 
-        let validRank = rankValues[newRank] ? newRank : "gold";
-        let newPlayerObj = { name: newName, discord_id: newDiscordId || "N/A", rank: validRank, value: rankValues[validRank] };
+    function closeReplacePlayerModal() {
+        document.getElementById("replacePlayerModal").classList.remove("active");
+        currentReplaceTarget = { teamIndex: null, playerIndex: null };
+    }
+
+    async function saveReplacementPlayer() {
+        let { teamIndex, playerIndex } = currentReplaceTarget;
+        if (teamIndex === null || playerIndex === null) return;
+
+        let newName = document.getElementById("modalPlayerName").value.trim();
+        if(!newName) return alert("Escribe un nombre para el participante.");
+        let newBnetId = document.getElementById("modalPlayerBnet").value.trim() || "N/A";
+        let newDiscordId = document.getElementById("modalPlayerDiscord").value.trim() || "N/A";
+        let newRank = document.getElementById("modalPlayerRank").value;
+
+        let newPlayerObj = {
+            name: newName,
+            bnet_id: newBnetId,
+            discord_id: newDiscordId,
+            rank: newRank,
+            value: rankValues[newRank]
+        };
 
         let { data, error } = await _supabase.from('players').insert([newPlayerObj]).select();
         if(error) { alert("Error al guardar en Supabase"); return; }
@@ -320,6 +591,7 @@
             teams[teamIndex].players[playerIndex] = newPlayerObj;
         }
         await saveTournamentStateDB();
+        closeReplacePlayerModal();
         renderAll();
     }
 
@@ -364,6 +636,7 @@
         matchScores = {};
         activeMatchData = null;
         lastVictoryData = null;
+        championBox = null;
         await saveTournamentStateDB();
         renderAll();
     }
@@ -391,36 +664,67 @@
         document.getElementById("victoryModal").classList.remove("active");
     }
 
-    async function advanceMatch(sideIndex, rIndex, teamIndex, teamName) {
-        if(!teamName || teamName === "NULL" || teamName.includes("👑")) return;
+    async function handleStreamOrFinalizeMatch(sideIndex, rIndex, matchIndex, iIndex, t1, t2, isFinal = false) {
+        if(!t1 || !t2 || t1 === "NULL" || t2 === "NULL") return alert("Combate no disponible todavía.");
+        let key = isFinal ? `final_r0_m0` : `${sideIndex === 0 ? 'left' : 'right'}_r${rIndex}_m${matchIndex}`;
+        let scores = matchScores[key] || { score1: 0, score2: 0 };
+
+        let sideKey = isFinal ? 'final' : (sideIndex === 0 ? 'left' : 'right');
+
+        let isActiveOnStream = activeMatchData &&
+            activeMatchData.sideKey === sideKey &&
+            activeMatchData.rIndex === rIndex &&
+            activeMatchData.matchIndex === matchIndex;
+
+        if (isActiveOnStream) {
+            if (scores.score1 === scores.score2) {
+                return alert("No se puede finalizar el combate con empate en el puntaje. Ajusta los puntos antes de finalizar.");
+            }
+
+            let winnerTeam = scores.score1 > scores.score2 ? t1 : t2;
+            activeMatchData = null;
+
+            if (isFinal) {
+                await advanceFinalWinner(winnerTeam);
+            } else {
+                await advanceMatch(sideIndex, rIndex, iIndex, winnerTeam);
+            }
+        } else {
+            activeMatchData = { sideKey, rIndex, matchIndex, team1: t1, team2: t2, score1: scores.score1, score2: scores.score2 };
+            await saveTournamentStateDB();
+            alert(`¡Combate enviado al stream: ${t1} vs ${t2}! Ahora podrás finalizarlo desde aquí cuando termine.`);
+            renderAll();
+        }
+    }
+
+    async function advanceMatch(sideIndex, rIndex, iIndex, teamNameStr) {
+        if(!teamNameStr || teamNameStr === "NULL") return;
 
         let sideRounds = rounds[sideIndex];
-        let currentRoundList = sideRounds[rIndex];
         let nextR = rIndex + 1;
 
         if (nextR < sideRounds.length) {
-            let slot = Math.floor(teamIndex / 2);
-            sideRounds[nextR][slot] = teamName;
+            let slot = Math.floor(iIndex / 2);
+            sideRounds[nextR][slot] = teamNameStr;
         } else {
             let finalSlot = sideIndex === 0 ? 0 : 1;
             if(!rounds[2]) rounds[2] = [[null, null]];
-            rounds[2][0][finalSlot] = teamName;
+            rounds[2][0][finalSlot] = teamNameStr;
         }
 
-        lastVictoryData = { teamName: teamName, isTournamentWinner: false, timestamp: Date.now() };
+        lastVictoryData = { teamName: teamNameStr, isTournamentWinner: false, timestamp: Date.now() };
+
         await saveTournamentStateDB();
         renderAll();
-        triggerVictoryModal(teamName, false);
+        triggerVictoryModal(teamNameStr, false);
     }
 
     async function advanceFinalWinner(teamName) {
         if(!teamName || teamName === "NULL") return;
-        let finalMatch = rounds[2][0];
-        let opponent = (finalMatch[0] === teamName) ? finalMatch[1] : finalMatch[0];
 
-        rounds[2][0] = [`👑 CAMPEÓN: ${teamName}`, opponent];
-
+        championBox = teamName;
         lastVictoryData = { teamName: teamName, isTournamentWinner: true, timestamp: Date.now() };
+
         await saveTournamentStateDB();
         renderAll();
         triggerVictoryModal(teamName, true);
@@ -440,20 +744,8 @@
         renderAll();
     }
 
-    async function setStreamMatch(sideKey, rIndex, matchIndex, t1, t2) {
-        if(!t1 || !t2 || t1 === "NULL" || t2 === "NULL") return alert("Combate no disponible todavía.");
-        let key = `${sideKey}_r${rIndex}_m${matchIndex}`;
-        let scores = matchScores[key] || { score1: 0, score2: 0 };
-
-        activeMatchData = { sideKey, rIndex, matchIndex, team1: t1, team2: t2, score1: scores.score1, score2: scores.score2 };
-        await saveTournamentStateDB();
-        alert(`¡Combate enviado al stream: ${t1} vs ${t2}!`);
-        renderAll();
-    }
-
     function getTeamAbbr(teamName) {
         if (!teamName || teamName === "NULL") return "NULL";
-        if (teamName.includes("👑 CAMPEÓN:")) return teamName.replace("👑 CAMPEÓN: ", "");
         let found = teams.find(t => t.name === teamName);
         if(found && found.abbr) return found.abbr;
         if(teamName.length > 5) return teamName.substring(0, 3).toUpperCase();
@@ -463,24 +755,32 @@
     function toggleTeamDisplay(elementId, fullName) {
         let el = document.getElementById(elementId);
         if(!el || fullName === "NULL") return;
-        let cleanName = fullName.includes("👑 CAMPEÓN:") ? fullName.replace("👑 CAMPEÓN: ", "") : fullName;
+        let textSpan = el.querySelector(".team-text") || el;
+
         if(el.dataset.showing === "full") {
-            el.innerText = el.dataset.abbr;
+            textSpan.innerText = el.dataset.abbr;
             el.dataset.showing = "abbr";
         } else {
-            el.innerText = cleanName;
+            textSpan.innerText = fullName;
             el.dataset.showing = "full";
         }
     }
 
+    // Se eliminó el avance automático por nulls para controlarlo mediante el botón manual.
+    function checkAndAutoAdvanceNulls() {
+        // Función vacía dejada por compatibilidad de estructura
+    }
+
     function renderAll() {
+        checkAndAutoAdvanceNulls();
+
         document.getElementById("playerCounter").innerText = players.length;
         let rList = document.getElementById("rosterList");
         rList.innerHTML = players.map((p, i) => `
             <div class="team-player">
                 <div>
                     <span>${p.name}</span>
-                    <div style="font-size:11px; color:#aaa;">ID: ${p.discord_id || 'N/A'}</div>
+                    <div style="font-size:11px; color:#aaa;">BNet: ${p.bnet_id || 'N/A'} | Disc: ${p.discord_id || 'N/A'} ${p.custom_team ? '⭐ ('+p.custom_team+')' : ''}</div>
                 </div>
                 <span class="rank-tag">${p.rank}</span>
                 <button style="background:#ff4444; border:none; color:white; border-radius:4px; padding:2px 5px; cursor:pointer;" onclick="removePlayerFromRoster(${i})">X</button>
@@ -489,19 +789,19 @@
         let tCont = document.getElementById("teamsContainer");
         tCont.innerHTML = teams.length === 0 ? `<div style="color: #666; text-align:center; padding: 20px;">Sin equipos</div>` :
         teams.map((t, ti) => `
-            <div class="team-card">
-                <div class="team-title" onclick="editTeamInfo(${ti})">
-                    ${t.name} <span style="background:rgba(195,140,255,0.2); color:#c38cff; padding:2px 6px; border-radius:4px; font-size:12px; margin-left:5px;">[${t.abbr || '---'}]</span> ✏️
+            <div class="team-card" style="${t.isCustom ? 'border: 1px solid #27ae60;' : ''}">
+                <div class="team-title" onclick="openEditTeamModal(${ti})">
+                    ${t.name} ${t.isCustom ? '⭐' : ''} <span style="background:rgba(195,140,255,0.2); color:#c38cff; padding:2px 6px; border-radius:4px; font-size:12px; margin-left:5px;">[${t.abbr || '---'}]</span> ✏️
                 </div>
                 ${t.players.map((p, pi) => {
                     if(p.isPlaceholder) {
-                        return `<div class="team-player" style="background:rgba(255,165,0,0.1); border:1px dashed orange; cursor:pointer;" onclick="replacePlaceholderPlayer(${ti}, ${pi})"><span>${p.name}</span> <span style="color:orange; font-size:11px;">(Añadir)</span></div>`;
+                        return `<div class="team-player" style="background:rgba(255,165,0,0.1); border:1px dashed orange; cursor:pointer;" onclick="openReplacePlayerModal(${ti}, ${pi})"><span>${p.name}</span> <span style="color:orange; font-size:11px;">(Añadir)</span></div>`;
                     }
                     return `
                         <div class="team-player">
                             <div>
                                 <span>${p.name}</span>
-                                <div style="font-size:11px; color:#aaa;">ID: ${p.discord_id || 'N/A'}</div>
+                                <div style="font-size:11px; color:#aaa;">BNet: ${p.bnet_id || 'N/A'} | Disc: ${p.discord_id || 'N/A'}</div>
                             </div>
                             <span class="rank-tag">${p.rank}</span>
                             <button style="background:#ff4444; border:none; color:white; border-radius:4px; padding:2px 4px; cursor:pointer;" onclick="removePlayerFromTeam(${ti}, ${pi})">Quitar</button>
@@ -518,11 +818,15 @@
 
         let leftSideHTML = renderSide(rounds[0], 0, "left");
         let finalHTML = renderFinal();
+        let championColumnHTML = renderChampionColumn();
         let rightSideHTML = renderSide(rounds[1], 1, "right");
 
         bCont.innerHTML = `
             <div style="display: flex; gap: 15px; align-items: center;">${leftSideHTML}</div>
-            <div style="display: flex; flex-direction: column; align-items: center; padding: 0 10px;">${finalHTML}</div>
+            <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 20px; padding: 0 10px;">
+                ${championColumnHTML}
+                ${finalHTML}
+            </div>
             <div style="display: flex; gap: 15px; align-items: center; flex-direction: row-reverse;">${rightSideHTML}</div>
         `;
     }
@@ -560,41 +864,65 @@
             let fullText1 = (t1 === null || t1 === undefined) ? "NULL" : t1;
             let fullText2 = (t2 === null || t2 === undefined) ? "NULL" : t2;
 
+            let isActive = activeMatchData &&
+                activeMatchData.sideKey === sideKey &&
+                activeMatchData.rIndex === ri &&
+                activeMatchData.matchIndex === mIndex;
+
+            let btnText = isActive ? "🛑 Finalizar Combate" : "📺 Enviar al Stream";
+            let btnBg = isActive ? "#e74c3c" : "#0984e3";
+
+            // Lógica para detectar si uno es NULL y mostrar el botón de pase manual
+            let isT1Null = (t1 === null || t1 === undefined || t1 === "NULL" || t1 === "");
+            let isT2Null = (t2 === null || t2 === undefined || t2 === "NULL" || t2 === "");
+            let manualButtonHTML = "";
+
+            if ((!isT1Null && isT2Null) || (isT2Null && !isT1Null)) {
+                let survivingTeam = !isT1Null ? t1 : t2;
+                manualButtonHTML = `<button class="btn-primary" style="font-size:10px; padding:4px; margin-top:2px; background: #27ae60; cursor:pointer; width: 100%; box-sizing: border-box; font-weight: bold;" onclick="advanceMatch(${sideIndex}, ${ri}, ${i}, '${survivingTeam}')">▶ Pasar Manualmente (${survivingTeam})</button>`;
+            } else if (!isT1Null && !isT2Null) {
+                manualButtonHTML = `<button class="btn-primary" style="font-size:10px; padding:4px; margin-top:2px; background: ${btnBg}; cursor:pointer; width: 100%; box-sizing: border-box; font-weight: bold;" onclick="handleStreamOrFinalizeMatch(${sideIndex}, ${ri}, ${mIndex}, ${i}, '${t1}', '${t2}', false)">${btnText}</button>`;
+            }
+
             html += `
-                <div class="match" style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 8px; display: flex; flex-direction: column; gap: 6px;">
-                    <div style="display: flex; align-items: center; justify-content: space-between; background: rgba(0,0,0,0.2); padding: 4px 8px; border-radius: 6px;">
-                        <div style="display: flex; align-items: center; gap: 6px;">
-                            <span style="font-weight: bold; color: #2ecc71; font-size: 13px;">[${scores.score1}]</span>
-                            <span id="${idEl1}" class="match-team ${s1Class}" style="font-weight: bold; font-size: 13px; ${t1 === null ? 'color: #777; font-style: italic;' : ''}" data-abbr="${abbr1}" data-showing="abbr" onclick="toggleTeamDisplay('${idEl1}', '${fullText1}')">
-                                ${display1}
+                <div class="match" style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 8px; display: flex; flex-direction: column; gap: 6px; width: 230px; box-sizing: border-box;">
+                    <!-- EQUIPO 1 -->
+                    <div style="display: flex; align-items: center; justify-content: space-between; background: rgba(0,0,0,0.2); padding: 4px 6px; border-radius: 6px; gap: 4px; min-width: 0;">
+                        <div style="display: flex; align-items: center; gap: 4px; overflow: hidden; min-width: 0; flex: 1;">
+                            <span style="font-weight: bold; color: #2ecc71; font-size: 12px; flex-shrink: 0;">[${scores.score1}]</span>
+                            <span id="${idEl1}" class="match-team ${s1Class}" style="font-weight: bold; font-size: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; ${t1 === null ? 'color: #777; font-style: italic;' : ''}" data-abbr="${abbr1}" data-showing="abbr" onclick="toggleTeamDisplay('${idEl1}', '${fullText1}')">
+                                <span class="team-text">${display1}</span>
                                 ${t1 !== null && t1 !== "NULL" ? `<span class="tooltip-name">${t1}</span>` : ''}
                             </span>
                         </div>
-                        <div style="display: flex; gap: 2px;">
-                            <button style="background:rgba(255,255,255,0.1); border:none; color:white; width:18px; height:18px; border-radius:3px; cursor:pointer; font-size:10px;" onclick="updateScore('${sideKey}', ${ri}, ${mIndex}, 1, -1)">-</button>
-                            <button style="background:rgba(255,255,255,0.1); border:none; color:white; width:18px; height:18px; border-radius:3px; cursor:pointer; font-size:10px;" onclick="updateScore('${sideKey}', ${ri}, ${mIndex}, 1, 1)">+</button>
-                            ${t1 !== null && t1 !== "NULL" ? `<button style="background:#6c5ce7; border:none; color:white; padding:0 4px; border-radius:3px; cursor:pointer; font-size:10px;" onclick="advanceMatch(${sideIndex}, ${ri}, ${i}, '${t1}')">✔</button>` : ''}
+                        <div style="display: flex; align-items: center; gap: 3px; flex-shrink: 0;">
+                            <div style="display: flex; gap: 1px;">
+                                <button style="background:rgba(255,255,255,0.1); border:none; color:white; width:16px; height:16px; border-radius:3px; cursor:pointer; font-size:10px; display:flex; align-items:center; justify-content:center;" onclick="updateScore('${sideKey}', ${ri}, ${mIndex}, 1, -1)">-</button>
+                                <button style="background:rgba(255,255,255,0.1); border:none; color:white; width:16px; height:16px; border-radius:3px; cursor:pointer; font-size:10px; display:flex; align-items:center; justify-content:center;" onclick="updateScore('${sideKey}', ${ri}, ${mIndex}, 1, 1)">+</button>
+                            </div>
                         </div>
                     </div>
 
-                    <div style="text-align: center; font-size: 10px; color: #777; font-weight: bold;">---- VS ----</div>
+                    <div style="text-align: center; font-size: 9px; color: #777; font-weight: bold;">---- VS ----</div>
 
-                    <div style="display: flex; align-items: center; justify-content: space-between; background: rgba(0,0,0,0.2); padding: 4px 8px; border-radius: 6px;">
-                        <div style="display: flex; align-items: center; gap: 6px;">
-                            <span style="font-weight: bold; color: #2ecc71; font-size: 13px;">[${scores.score2}]</span>
-                            <span id="${idEl2}" class="match-team ${s2Class}" style="font-weight: bold; font-size: 13px; ${t2 === null ? 'color: #777; font-style: italic;' : ''}" data-abbr="${abbr2}" data-showing="abbr" onclick="toggleTeamDisplay('${idEl2}', '${fullText2}')">
-                                ${display2}
+                    <!-- EQUIPO 2 -->
+                    <div style="display: flex; align-items: center; justify-content: space-between; background: rgba(0,0,0,0.2); padding: 4px 6px; border-radius: 6px; gap: 4px; min-width: 0;">
+                        <div style="display: flex; align-items: center; gap: 4px; overflow: hidden; min-width: 0; flex: 1;">
+                            <span style="font-weight: bold; color: #2ecc71; font-size: 12px; flex-shrink: 0;">[${scores.score2}]</span>
+                            <span id="${idEl2}" class="match-team ${s2Class}" style="font-weight: bold; font-size: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; ${t2 === null ? 'color: #777; font-style: italic;' : ''}" data-abbr="${abbr2}" data-showing="abbr" onclick="toggleTeamDisplay('${idEl2}', '${fullText2}')">
+                                <span class="team-text">${display2}</span>
                                 ${t2 !== null && t2 !== "NULL" ? `<span class="tooltip-name">${t2}</span>` : ''}
                             </span>
                         </div>
-                        <div style="display: flex; gap: 2px;">
-                            <button style="background:rgba(255,255,255,0.1); border:none; color:white; width:18px; height:18px; border-radius:3px; cursor:pointer; font-size:10px;" onclick="updateScore('${sideKey}', ${ri}, ${mIndex}, 2, -1)">-</button>
-                            <button style="background:rgba(255,255,255,0.1); border:none; color:white; width:18px; height:18px; border-radius:3px; cursor:pointer; font-size:10px;" onclick="updateScore('${sideKey}', ${ri}, ${mIndex}, 2, 1)">+</button>
-                            ${t2 !== null && t2 !== "NULL" ? `<button style="background:#6c5ce7; border:none; color:white; padding:0 4px; border-radius:3px; cursor:pointer; font-size:10px;" onclick="advanceMatch(${sideIndex}, ${ri}, ${i+1}, '${t2}')">✔</button>` : ''}
+                        <div style="display: flex; align-items: center; gap: 3px; flex-shrink: 0;">
+                            <div style="display: flex; gap: 1px;">
+                                <button style="background:rgba(255,255,255,0.1); border:none; color:white; width:16px; height:16px; border-radius:3px; cursor:pointer; font-size:10px; display:flex; align-items:center; justify-content:center;" onclick="updateScore('${sideKey}', ${ri}, ${mIndex}, 2, -1)">-</button>
+                                <button style="background:rgba(255,255,255,0.1); border:none; color:white; width:16px; height:16px; border-radius:3px; cursor:pointer; font-size:10px; display:flex; align-items:center; justify-content:center;" onclick="updateScore('${sideKey}', ${ri}, ${mIndex}, 2, 1)">+</button>
+                            </div>
                         </div>
                     </div>
 
-                    ${(t1 !== null && t2 !== null && t1 !== "NULL" && t2 !== "NULL") ? `<button class="btn-primary" style="font-size:10px; padding:3px; margin-top:2px; background: #0984e3; cursor:pointer;" onclick="setStreamMatch('${sideKey}', ${ri}, ${mIndex}, '${t1}', '${t2}')">📺 Enviar al Stream</button>` : ''}
+                    ${manualButtonHTML}
                 </div>
             `;
         }
@@ -622,42 +950,85 @@
         let fullText1 = (t1 === null || t1 === undefined) ? "NULL" : t1;
         let fullText2 = (t2 === null || t2 === undefined) ? "NULL" : t2;
 
+        let isActive = activeMatchData && activeMatchData.sideKey === 'final';
+        let btnText = isActive ? "🛑 Finalizar Gran Final" : "📺 Enviar al Stream";
+        let btnBg = isActive ? "#e74c3c" : "#0984e3";
+
+        let isT1Null = (t1 === null || t1 === undefined || t1 === "NULL" || t1 === "");
+        let isT2Null = (t2 === null || t2 === undefined || t2 === "NULL" || t2 === "");
+        let manualButtonHTML = "";
+
+        if ((!isT1Null && isT2Null) || (isT2Null && !isT1Null)) {
+            let survivingTeam = !isT1Null ? t1 : t2;
+            manualButtonHTML = `<button class="btn-primary" style="font-size:10px; padding:4px; margin-top:2px; background: #27ae60; cursor:pointer; width: 100%; box-sizing: border-box; font-weight: bold;" onclick="advanceFinalWinner('${survivingTeam}')">▶ Declarar Campeón (${survivingTeam})</button>`;
+        } else if (!isT1Null && !isT2Null) {
+            manualButtonHTML = `<button class="btn-primary" style="font-size:10px; padding:4px; margin-top:2px; background: ${btnBg}; cursor:pointer; width: 100%; box-sizing: border-box; font-weight: bold;" onclick="handleStreamOrFinalizeMatch(0, 0, 0, 0, '${t1}', '${t2}', true)">${btnText}</button>`;
+        }
+
         return `
-            <div style="font-size: 12px; color: gold; font-weight: bold; margin-bottom: 8px; text-align: center;">🏆 GRAN FINAL</div>
-            <div class="match" style="background: rgba(255,215,0,0.05); border: 1px solid rgba(255,215,0,0.3); border-radius: 8px; padding: 10px; display: flex; flex-direction: column; gap: 6px; width: 240px;">
-                <div style="display: flex; align-items: center; justify-content: space-between; background: rgba(0,0,0,0.3); padding: 6px 8px; border-radius: 6px;">
-                    <div style="display: flex; align-items: center; gap: 6px;">
-                        <span style="font-weight: bold; color: #2ecc71; font-size: 13px;">[${scores.score1}]</span>
-                        <span id="${idEl1}" class="match-team ${s1Class}" style="font-weight: bold; font-size: 13px; ${t1 === null ? 'color: #777; font-style: italic;' : ''}" data-abbr="${abbr1}" data-showing="abbr" onclick="toggleTeamDisplay('${idEl1}', '${fullText1}')">
-                            ${display1}
-                            ${t1 !== null && t1 !== "NULL" ? `<span class="tooltip-name">${t1}</span>` : ''}
+            <div class="round" style="display: flex; flex-direction: column; gap: 15px; justify-content: center; min-width: 220px;">
+                <div style="font-size: 12px; color: gold; font-weight: bold; text-align: center; margin-bottom: 5px;">🏆 GRAN FINAL</div>
+                <div class="match" style="background: rgba(255,215,0,0.05); border: 1px solid rgba(255,215,0,0.3); border-radius: 8px; padding: 10px; display: flex; flex-direction: column; gap: 6px; width: 230px; box-sizing: border-box;">
+                    <!-- EQUIPO 1 -->
+                    <div style="display: flex; align-items: center; justify-content: space-between; background: rgba(0,0,0,0.3); padding: 5px 6px; border-radius: 6px; gap: 4px; min-width: 0;">
+                        <div style="display: flex; align-items: center; gap: 4px; overflow: hidden; min-width: 0; flex: 1;">
+                            <span style="font-weight: bold; color: #2ecc71; font-size: 12px; flex-shrink: 0;">[${scores.score1}]</span>
+                            <span id="${idEl1}" class="match-team ${s1Class}" style="font-weight: bold; font-size: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; ${t1 === null ? 'color: #777; font-style: italic;' : ''}" data-abbr="${abbr1}" data-showing="abbr" onclick="toggleTeamDisplay('${idEl1}', '${fullText1}')">
+                                <span class="team-text">${display1}</span>
+                                ${t1 !== null && t1 !== "NULL" ? `<span class="tooltip-name">${t1}</span>` : ''}
+                            </span>
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 3px; flex-shrink: 0;">
+                            <div style="display: flex; gap: 1px;">
+                                <button style="background:rgba(255,255,255,0.1); border:none; color:white; width:16px; height:16px; border-radius:3px; cursor:pointer; font-size:10px; display:flex; align-items:center; justify-content:center;" onclick="updateScore('final', 0, 0, 1, -1)">-</button>
+                                <button style="background:rgba(255,255,255,0.1); border:none; color:white; width:16px; height:16px; border-radius:3px; cursor:pointer; font-size:10px; display:flex; align-items:center; justify-content:center;" onclick="updateScore('final', 0, 0, 1, 1)">+</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div style="text-align: center; font-size: 9px; color: gold; font-weight: bold;">---- VS ----</div>
+
+                    <!-- EQUIPO 2 -->
+                    <div style="display: flex; align-items: center; justify-content: space-between; background: rgba(0,0,0,0.3); padding: 5px 6px; border-radius: 6px; gap: 4px; min-width: 0;">
+                        <div style="display: flex; align-items: center; gap: 4px; overflow: hidden; min-width: 0; flex: 1;">
+                            <span style="font-weight: bold; color: #2ecc71; font-size: 12px; flex-shrink: 0;">[${scores.score2}]</span>
+                            <span id="${idEl2}" class="match-team ${s2Class}" style="font-weight: bold; font-size: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; ${t2 === null ? 'color: #777; font-style: italic;' : ''}" data-abbr="${abbr2}" data-showing="abbr" onclick="toggleTeamDisplay('${idEl2}', '${fullText2}')">
+                                <span class="team-text">${display2}</span>
+                                ${t2 !== null && t2 !== "NULL" ? `<span class="tooltip-name">${t2}</span>` : ''}
+                            </span>
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 3px; flex-shrink: 0;">
+                            <div style="display: flex; gap: 1px;">
+                                <button style="background:rgba(255,255,255,0.1); border:none; color:white; width:16px; height:16px; border-radius:3px; cursor:pointer; font-size:10px; display:flex; align-items:center; justify-content:center;" onclick="updateScore('final', 0, 0, 2, -1)">-</button>
+                                <button style="background:rgba(255,255,255,0.1); border:none; color:white; width:16px; height:16px; border-radius:3px; cursor:pointer; font-size:10px; display:flex; align-items:center; justify-content:center;" onclick="updateScore('final', 0, 0, 2, 1)">+</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    ${manualButtonHTML}
+                </div>
+            </div>
+        `;
+    }
+
+    function renderChampionColumn() {
+        let abbr = getTeamAbbr(championBox);
+        let display = !championBox ? "NULL" : abbr;
+        let fullText = !championBox ? "NULL" : championBox;
+        let idEl = "champion_box_element";
+
+        return `
+            <div class="round" style="display: flex; flex-direction: column; gap: 15px; justify-content: center; min-width: 200px;">
+                <div style="font-size: 12px; color: gold; font-weight: bold; text-align: center; margin-bottom: 5px;">👑 CAMPEÓN</div>
+                <div class="match" style="background: rgba(255,215,0,0.1); border: 2px solid gold; border-radius: 8px; padding: 12px; display: flex; flex-direction: column; gap: 6px; width: 200px; box-sizing: border-box; box-shadow: 0 0 10px rgba(255,215,0,0.2);">
+                    <div style="font-size: 9px; color: gold; font-weight: bold; text-align: center; letter-spacing: 1px;">GANADOR DEL TORNEO</div>
+                    <div style="display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,0.4); padding: 8px; border-radius: 6px;">
+                        <span id="${idEl}" class="match-team" style="font-weight: bold; font-size: 13px; color: ${!championBox ? '#777' : '#fff'}; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; ${!championBox ? 'font-style: italic;' : ''}" data-abbr="${abbr}" data-showing="abbr" onclick="toggleTeamDisplay('${idEl}', '${fullText}')">
+                            <span class="team-text">${display}</span>
+                            ${championBox ? `<span class="tooltip-name">${championBox}</span>` : ''}
                         </span>
                     </div>
-                    <div style="display: flex; gap: 2px;">
-                        <button style="background:rgba(255,255,255,0.1); border:none; color:white; width:18px; height:18px; border-radius:3px; cursor:pointer; font-size:10px;" onclick="updateScore('final', 0, 0, 1, -1)">-</button>
-                        <button style="background:rgba(255,255,255,0.1); border:none; color:white; width:18px; height:18px; border-radius:3px; cursor:pointer; font-size:10px;" onclick="updateScore('final', 0, 0, 1, 1)">+</button>
-                        ${t1 !== null && t1 !== "NULL" && !t1.includes("👑 CAMPEÓN") ? `<button style="background:gold; color:#000; border:none; padding:0 6px; border-radius:3px; cursor:pointer; font-weight:bold; font-size:10px;" onclick="advanceFinalWinner('${t1}')">👑</button>` : ''}
-                    </div>
                 </div>
-
-                <div style="text-align: center; font-size: 10px; color: gold; font-weight: bold;">---- VS ----</div>
-
-                <div style="display: flex; align-items: center; justify-content: space-between; background: rgba(0,0,0,0.3); padding: 6px 8px; border-radius: 6px;">
-                    <div style="display: flex; align-items: center; gap: 6px;">
-                        <span style="font-weight: bold; color: #2ecc71; font-size: 13px;">[${scores.score2}]</span>
-                        <span id="${idEl2}" class="match-team ${s2Class}" style="font-weight: bold; font-size: 13px; ${t2 === null ? 'color: #777; font-style: italic;' : ''}" data-abbr="${abbr2}" data-showing="abbr" onclick="toggleTeamDisplay('${idEl2}', '${fullText2}')">
-                            ${display2}
-                            ${t2 !== null && t2 !== "NULL" ? `<span class="tooltip-name">${t2}</span>` : ''}
-                        </span>
-                    </div>
-                    <div style="display: flex; gap: 2px;">
-                        <button style="background:rgba(255,255,255,0.1); border:none; color:white; width:18px; height:18px; border-radius:3px; cursor:pointer; font-size:10px;" onclick="updateScore('final', 0, 0, 2, -1)">-</button>
-                        <button style="background:rgba(255,255,255,0.1); border:none; color:white; width:18px; height:18px; border-radius:3px; cursor:pointer; font-size:10px;" onclick="updateScore('final', 0, 0, 2, 1)">+</button>
-                        ${t2 !== null && t2 !== "NULL" && !t2.includes("👑 CAMPEÓN") ? `<button style="background:gold; color:#000; border:none; padding:0 6px; border-radius:3px; cursor:pointer; font-weight:bold; font-size:10px;" onclick="advanceFinalWinner('${t2}')">👑</button>` : ''}
-                    </div>
-                </div>
-
-                ${(t1 !== null && t2 !== null && t1 !== "NULL" && t2 !== "NULL") ? `<button class="btn-primary" style="font-size:10px; padding:3px; margin-top:2px; background: #0984e3; cursor:pointer;" onclick="setStreamMatch('final', 0, 0, '${t1}', '${t2}')">📺 Enviar al Stream</button>` : ''}
             </div>
         `;
     }

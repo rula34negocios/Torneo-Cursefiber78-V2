@@ -4,14 +4,11 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mapa de Trayectoria - Torneo</title>
+    <title>Stream Bracket - OBS</title>
     <style>
         :root {
-            --bg-dark: #0f0f1a;
-            --panel-bg: rgba(18, 18, 30, 0.9);
             --primary: #7a3cff;
-            --primary-glow: rgba(122, 60, 255, 0.6);
-            --accent: #8cf0ff;
+            --primary-glow: rgba(122, 60, 255, 0.4);
             --text-main: #ffffff;
         }
 
@@ -20,107 +17,38 @@
             padding: 0;
             width: 100%;
             height: 100%;
-            background: var(--bg-dark);
+            background: transparent !important;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             color: var(--text-main);
-            overflow-x: hidden;
-        }
-
-        body {
-            display: flex;
-            flex-direction: column;
             overflow: hidden;
-            background-color: #0b0b13;
         }
 
         .container {
-            max-width: 1700px;
-            margin: 0 auto;
-            padding: 20px;
-            display: flex;
-            flex-direction: column;
-            gap: 20px;
-            min-height: 100vh;
-            box-sizing: border-box;
-            flex: 1;
             width: 100vw;
-            max-width: 100% !important;
-            padding: 12px 24px;
-        }
-
-        .header {
-            background: var(--panel-bg);
-            border: 2px solid rgba(150, 80, 255, 0.6);
-            border-radius: 20px;
-            padding: 20px;
+            height: 100vh;
             display: flex;
-            justify-content: space-between;
+            justify-content: center;
             align-items: center;
-            box-shadow: 0 0 25px var(--primary-glow);
-            margin-bottom: 10px;
+            box-sizing: border-box;
+            padding: 20px;
+            background: transparent !important;
         }
 
-        .header h1 {
-            margin: 0;
-            font-size: 22px;
-            color: #c38cff;
-            text-shadow: 0 0 15px rgba(195, 140, 255, 0.8);
-        }
-
-        .nav-links {
-            display: flex;
-            gap: 10px;
-        }
-
-        button, a.btn {
-            border: none;
-            border-radius: 12px;
-            padding: 12px 18px;
-            font-size: 15px;
-            font-weight: bold;
-            cursor: pointer;
-            transition: 0.2s;
-            text-decoration: none;
-            display: inline-block;
-            text-align: center;
-        }
-
-        .btn-primary {
-            background: linear-gradient(135deg, #7a3cff, #a65cff);
-            color: white;
-            box-shadow: 0 0 12px var(--primary-glow);
-        }
-
-        .btn-primary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 0 20px rgba(166, 92, 255, 0.9);
-        }
-
-        .btn-secondary {
-            background: rgba(255, 255, 255, 0.08);
-            color: white;
-        }
-
-        .btn-secondary:hover {
-            background: rgba(255, 255, 255, 0.15);
-        }
-
-        /* --- BRACKET FULLSCREEN GRID Y COMPONENTES (Estilo Stream Bracket) --- */
+        /* --- CONTENEDOR SIN FONDO NI BORDES --- */
         .bracket-fullscreen-grid {
             display: flex;
             flex: 1;
-            background: rgba(18, 18, 28, 0.75);
-            border: 1px solid rgba(166, 92, 255, 0.25);
-            border-radius: 16px;
-            padding: 30px;
+            background: transparent !important;
+            border: none !important;
+            box-shadow: none !important;
+            padding: 20px;
             gap: 35px;
             align-items: center;
             justify-content: center;
-            overflow-x: auto;
-            backdrop-filter: blur(12px);
+            backdrop-filter: none !important;
             width: 100%;
+            max-width: 1700px;
             box-sizing: border-box;
-            box-shadow: 0 0 30px rgba(0, 0, 0, 0.6);
         }
 
         .round {
@@ -144,12 +72,6 @@
             box-shadow: 0 6px 20px rgba(0, 0, 0, 0.6);
             position: relative;
             overflow: visible !important;
-            transition: all 0.3s ease;
-        }
-
-        .match-card:hover {
-            border-color: rgba(166, 92, 255, 0.7);
-            box-shadow: 0 8px 25px rgba(166, 92, 255, 0.25);
         }
 
         /* Casilla individual del equipo */
@@ -161,7 +83,6 @@
             border: 1px solid rgba(255, 255, 255, 0.08);
             border-radius: 8px;
             padding: 8px 12px;
-            transition: all 0.3s ease;
             position: relative;
         }
 
@@ -278,7 +199,7 @@
             text-shadow: 0 0 10px rgba(255, 215, 0, 0.6);
         }
 
-        /* Tooltip de nombre completo con prioridad absoluta */
+        /* Tooltip de nombre completo */
         .team-container {
             position: relative;
             display: inline-block;
@@ -308,75 +229,13 @@
         .team-container:hover .tooltip-name {
             visibility: visible;
         }
-
-        /* --- MODALES --- */
-        #teamsModal {
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(10, 10, 20, 0.85);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            z-index: 9999;
-            opacity: 0;
-            pointer-events: none;
-            transition: opacity 0.3s ease-in-out;
-            backdrop-filter: blur(6px);
-        }
-
-        #teamsModal.active {
-            opacity: 1;
-            pointer-events: auto;
-        }
-
-        .modal-content {
-            background: linear-gradient(135deg, #1e1e2f, #2d1b4e);
-            border: 2px solid #a65cff;
-            padding: 28px;
-            border-radius: 20px;
-            width: 90%;
-            max-width: 680px;
-            max-height: 80vh;
-            display: flex;
-            flex-direction: column;
-            box-shadow: 0 0 50px rgba(166, 92, 255, 0.6);
-        }
-
-        .rank-tag {
-            font-size: 11px;
-            background: rgba(150, 80, 255, 0.3);
-            padding: 2px 6px;
-            border-radius: 4px;
-            text-transform: uppercase;
-        }
     </style>
 </head>
 <body>
 
-<!-- Modal de Integrantes -->
-<div id="teamsModal">
-    <div class="modal-content">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
-            <h2 style="color: #c38cff; margin:0; font-size: 20px;">👥 Equipos e Integrantes del Torneo</h2>
-            <button class="btn-secondary" onclick="toggleTeamsModal()" style="padding: 6px 14px; cursor: pointer;">✕ Cerrar</button>
-        </div>
-        <div id="teamsModalBody" style="overflow-y: auto; flex: 1; display: flex; flex-direction: column; gap: 12px; padding-right: 6px;"></div>
-    </div>
-</div>
-
 <div class="container">
-    <div class="header">
-        <h1>🏆 TORNEO DE OVERWATCH CURSEDFIBER78</h1>
-        <div class="nav-links">
-            <button class="btn-primary" onclick="toggleTeamsModal()">👥 Ver Integrantes</button>
-            <a href="index.html" class="btn btn-secondary">Inicio</a>
-            <a href="stream.html" class="btn btn-secondary">Vista Streamer</a>
-        </div>
-    </div>
-
-    <!-- Contenedor Principal del Bracket -->
     <div class="bracket-fullscreen-grid" id="bracketView">
-        <div style="color:#888; text-align:center; width: 100%; font-size:16px;">El torneo aún no ha comenzado</div>
+        <div style="color:#888; text-align:center; width: 100%; font-size:16px;">Cargando mapa de trayectoria...</div>
     </div>
 </div>
 
@@ -399,39 +258,6 @@
         } else if (error) {
             console.error("Error al cargar datos en Supabase:", error);
         }
-    }
-
-    function toggleTeamsModal() {
-        let modal = document.getElementById("teamsModal");
-        modal.classList.toggle("active");
-        if (modal.classList.contains("active")) {
-            renderModalTeams();
-        }
-    }
-
-    function renderModalTeams() {
-        let tView = document.getElementById("teamsModalBody");
-        tView.innerHTML = teams.length === 0 ? `<div style="color:#666; text-align:center; padding: 20px;">No hay equipos registrados aún</div>` :
-        teams.map(t => `
-            <div style="background:rgba(122,60,255,0.12); border:1px solid rgba(166,92,255,0.35); border-radius:12px; padding:14px;">
-                <div style="font-weight:bold; color:#c38cff; margin-bottom:10px; font-size: 16px;">
-                    ${t.name} <span style="background:rgba(195,140,255,0.25); color:#fff; padding:2px 8px; border-radius:6px; font-size:12px; margin-left:6px;">[${t.abbr || '---'}]</span>
-                </div>
-                ${t.players.map(p => {
-                    if(p.isPlaceholder) return `<div style="font-size:12px; color:orange; background:rgba(255,165,0,0.08); padding:6px; margin-top:4px; border-radius:6px; border:1px dashed orange;">⚠️ [Espacio libre para participante]</div>`;
-                    return `
-                        <div style="display:flex; justify-content:space-between; align-items:center; font-size:13px; background:rgba(0,0,0,0.35); padding:8px 12px; border-radius:8px; margin-top:6px; border:1px solid rgba(255,255,255,0.05);">
-                            <div>
-                                <span style="font-weight:bold; color:white; font-size:14px;">${p.name}</span>
-                                <div style="font-size:12px; color:#bbb; margin-top:3px;">
-                                    🎮 BNet: <strong style="color:#2ecc71;">${p.bnet_id || 'N/A'}</strong> | 💬 Discord: <strong style="color:#74b9ff;">${p.discord_id || 'N/A'}</strong>
-                                </div>
-                            </div>
-                            <span class="rank-tag" style="background:#6c5ce7; color:white; padding:4px 10px; border-radius:6px; font-size:11px; font-weight:bold;">${p.rank}</span>
-                        </div>`;
-                }).join('')}
-            </div>
-        `).join('');
     }
 
     function getTeamAbbr(teamName) {
@@ -465,7 +291,6 @@
         if (!sideRounds) return "";
         return sideRounds.map((rt, ri) => `
             <div class="round">
-                <div class="round-title" style="font-size: 13px; color: #a65cff; font-weight: 800; text-align: center; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 1.5px;">${sideKey.toUpperCase()} - FASE ${ri + 1}</div>
                 ${forPublicMatch(rt, ri, sideKey, sideIndex)}
             </div>
         `).join('');
@@ -617,16 +442,13 @@
     loadPublicData();
 
     _supabase
-      .channel('public:tournament_state_live')
+      .channel('public:stream_bracket_live')
       .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'tournament_state' }, payload => {
           if (payload.new) {
               teams = payload.new.teams || [];
               rounds = payload.new.rounds || [];
               matchScores = payload.new.match_scores || {};
               renderPublic();
-              if(document.getElementById("teamsModal").classList.contains("active")) {
-                  renderModalTeams();
-              }
           }
       })
       .subscribe();

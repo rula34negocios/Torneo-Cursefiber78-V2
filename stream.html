@@ -131,45 +131,19 @@
     }
 
     .winning-score {
-        color: #2ecc71 !important;
-        text-shadow: 0 0 12px rgba(46, 204, 113, 0.8) !important;
+        color: #f1c40f !important;
+        text-shadow: 0 0 12px rgba(241, 196, 15, 0.8) !important;
+    }
+
+    .equal-score {
+        color: #e74c3c !important;
+        text-shadow: 0 0 12px rgba(231, 76, 60, 0.8) !important;
     }
 
     .broadcast-score-divider {
         font-size: 20px;
         font-weight: 900;
         color: #4a69bd;
-    }
-
-    @keyframes slideDownWin {
-        0% {
-            transform: translateY(-15px) scaleY(0);
-            opacity: 0;
-        }
-        100% {
-            transform: translateY(0) scaleY(1);
-            opacity: 1;
-        }
-    }
-
-    .stream-win-badge {
-        position: absolute;
-        top: 95%;
-        left: 30%;
-        transform: translateX(-50%);
-        background: linear-gradient(135deg, #f1c40f, #f39c12);
-        color: #1a1a2e;
-        font-size: 11px;
-        font-weight: 900;
-        padding: 2px 18px;
-        border-bottom-left-radius: 120px;
-        border-bottom-right-radius: 6px;
-        letter-spacing: 1.5px;
-        box-shadow: 0 4px 10px rgba(241, 196, 15, 0.4);
-        text-transform: uppercase;
-        z-index: 1;
-        transform-origin: top center;
-        animation: slideDownWin 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
     }
 
     .waiting-text {
@@ -181,6 +155,160 @@
         font-size: 13px;
         font-weight: bold;
         text-align: center;
+    }
+
+    /* Animaciones Épicas de Celebración con Destello / Slash y Rebote 3D */
+    @keyframes epicSlashEntrance {
+        0% {
+            transform: scale(0.3) rotateX(45deg) translateY(50px);
+            opacity: 0;
+            filter: drop-shadow(0 0 0 rgba(255, 215, 0, 0));
+        }
+        50% {
+            transform: scale(1.08) rotateX(-10deg) translateY(-15px);
+            opacity: 1;
+            filter: drop-shadow(0 0 40px rgba(255, 215, 0, 0.95));
+        }
+        100% {
+            transform: scale(1) rotateX(0deg) translateY(0);
+            opacity: 1;
+            filter: drop-shadow(0 0 25px rgba(255, 215, 0, 0.7));
+        }
+    }
+
+    @keyframes goldEnergyPulse {
+        0% {
+            box-shadow: 0 0 20px rgba(212, 175, 55, 0.6), inset 0 0 20px rgba(255, 215, 0, 0.4);
+            border-color: #ffe066;
+        }
+        50% {
+            box-shadow: 0 0 45px rgba(255, 215, 0, 1), inset 0 0 30px rgba(255, 245, 150, 0.8);
+            border-color: #ffffff;
+        }
+        100% {
+            box-shadow: 0 0 20px rgba(212, 175, 55, 0.6), inset 0 0 20px rgba(255, 215, 0, 0.4);
+            border-color: #ffe066;
+        }
+    }
+
+    @keyframes shineGoldText {
+        0% { background-position: -200% center; }
+        100% { background-position: 200% center; }
+    }
+
+    @keyframes slashFlashOverlay {
+        0% {
+            transform: translateX(-150%) skewX(-25deg);
+            opacity: 0.8;
+        }
+        50% {
+            opacity: 1;
+        }
+        100% {
+            transform: translateX(150%) skewX(-25deg);
+            opacity: 0;
+        }
+    }
+
+    .victory-celebration-wrapper {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        perspective: 1000px;
+    }
+
+    .victory-card {
+        position: relative;
+        overflow: hidden;
+        background: linear-gradient(135deg, #1a1a2e, #16213e, #0f3460);
+        border: 3px solid #d4af37;
+        border-radius: 16px;
+        padding: 20px 45px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 8px;
+        animation: epicSlashEntrance 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards, goldEnergyPulse 2.5s infinite ease-in-out;
+        text-align: center;
+        min-width: 300px;
+    }
+
+    /* Franja brillante de energía tipo Slash que cruza al aparecer */
+    .victory-card::after {
+        content: '';
+        position: absolute;
+        top: -50%;
+        left: -50%;
+        width: 200%;
+        height: 200%;
+        background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.6), transparent);
+        pointer-events: none;
+        animation: slashFlashOverlay 0.9s ease-out forwards;
+    }
+
+    .victory-badge-top {
+        background: linear-gradient(90deg, #b8860b, #ffd700, #fff, #ffd700, #b8860b);
+        background-size: 200% auto;
+        color: #111;
+        font-size: 11px;
+        font-weight: 950;
+        text-transform: uppercase;
+        letter-spacing: 3px;
+        padding: 4px 18px;
+        border-radius: 20px;
+        box-shadow: 0 2px 10px rgba(255, 215, 0, 0.6);
+        animation: shineGoldText 2.5s linear infinite;
+    }
+
+    .victory-team-name {
+        font-size: 30px;
+        font-weight: 950;
+        color: #ffffff;
+        text-transform: uppercase;
+        letter-spacing: 2px;
+        text-shadow: 0 2px 10px rgba(0,0,0,0.9), 0 0 20px rgba(255, 215, 0, 0.8);
+        margin: 6px 0;
+    }
+
+    .victory-subtext {
+        font-size: 12px;
+        font-weight: 900;
+        color: #f1c40f;
+        text-transform: uppercase;
+        letter-spacing: 3.5px;
+        text-shadow: 0 0 8px rgba(241, 196, 15, 0.7);
+    }
+
+    .champion-stream-container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        background: rgba(20, 20, 30, 0.95);
+        border: 2px solid gold;
+        border-radius: 12px;
+        padding: 20px 40px;
+        box-shadow: 0 0 25px rgba(255, 215, 0, 0.4);
+        text-align: center;
+        animation: epicSlashEntrance 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+    }
+
+    .champion-title-text {
+        font-size: 14px;
+        color: gold;
+        font-weight: 900;
+        letter-spacing: 2px;
+        text-transform: uppercase;
+        margin-top: 8px;
+        text-shadow: 0 0 8px rgba(255, 215, 0, 0.6);
+    }
+
+    .champion-name-text {
+        font-size: 28px;
+        color: #ffffff;
+        font-weight: 900;
+        text-transform: uppercase;
+        letter-spacing: 1.5px;
+        text-shadow: 0 0 12px rgba(255, 255, 255, 0.8);
     }
   </style>
 </head>
@@ -197,30 +325,80 @@
 
   let currentMatchData = null;
   let globalMatchScores = {};
+  let lastVictoryData = null;
+  let championBox = null;
+  let tempVictoryTimer = null;
 
-  async function loadActiveMatch() {
-      let { data } = await _supabase.from('tournament_state').select('active_match, match_scores').eq('id', 1).single();
+  async function loadTournamentState() {
+      let { data } = await _supabase.from('tournament_state').select('active_match, match_scores, last_victory, champion_box').eq('id', 1).single();
       if (data) {
           globalMatchScores = data.match_scores || {};
-          // Validar explícitamente si existe active_match y tiene equipos válidos
-          if (data.active_match && data.active_match.team1 && data.active_match.team2) {
-              currentMatchData = data.active_match;
-              renderStreamMatch(currentMatchData);
-          } else {
-              currentMatchData = null;
-              renderStreamMatch(null);
+          lastVictoryData = data.last_victory || null;
+          championBox = data.champion_box || null;
+          processDisplayState(data.active_match);
+      }
+  }
+
+  function processDisplayState(activeMatch) {
+      if (championBox) {
+          renderChampionView(championBox);
+          return;
+      }
+
+      if (lastVictoryData && lastVictoryData.timestamp) {
+          let elapsed = Date.now() - lastVictoryData.timestamp;
+          if (elapsed < 15000) {
+              renderVictoryStreamView(lastVictoryData.teamName);
+              if (!tempVictoryTimer) {
+                  let remaining = 15000 - elapsed;
+                  tempVictoryTimer = setTimeout(() => {
+                      tempVictoryTimer = null;
+                      loadTournamentState();
+                  }, remaining);
+              }
+              return;
           }
       }
+
+      if (activeMatch && activeMatch.team1 && activeMatch.team2) {
+          currentMatchData = activeMatch;
+          renderStreamMatch(currentMatchData);
+      } else {
+          currentMatchData = null;
+          renderWaitingView();
+      }
+  }
+
+  function renderWaitingView() {
+      let container = document.getElementById("streamContainer");
+      container.innerHTML = `<div class="waiting-text">ESPERANDO PROXIMO COMBATE</div>`;
+  }
+
+  function renderChampionView(champName) {
+      let container = document.getElementById("streamContainer");
+      container.innerHTML = `
+          <div class="champion-stream-container">
+              <div class="champion-name-text">${champName}</div>
+              <div class="champion-title-text">CAMPEON DEL TORNEO</div>
+          </div>
+      `;
+  }
+
+  function renderVictoryStreamView(teamName) {
+      let container = document.getElementById("streamContainer");
+      container.innerHTML = `
+          <div class="victory-celebration-wrapper">
+              <div class="victory-card">
+                  <div class="victory-badge-top">¡VICTORIA!</div>
+                  <div class="victory-team-name">${teamName}</div>
+                  <div class="victory-subtext">AVANZA DE RONDA</div>
+              </div>
+          </div>
+      `;
   }
 
   function renderStreamMatch(match) {
       let container = document.getElementById("streamContainer");
-
-      // Si el combate es nulo, vacío o no tiene nombres de equipos válidos, muestra el mensaje de espera
-      if (!match || !match.team1 || !match.team2) {
-          container.innerHTML = `<div class="waiting-text">Esperando que el admin inicie un combate...</div>`;
-          return;
-      }
 
       let scoreKey = `${match.sideKey}_r${match.rIndex}_m${match.matchIndex}`;
       let liveScores = globalMatchScores[scoreKey];
@@ -231,11 +409,17 @@
       let t1 = match.team1;
       let t2 = match.team2;
 
-      let showWin1 = (s1 > s2);
-      let showWin2 = (s2 > s1);
+      let score1Class = "";
+      let score2Class = "";
 
-      let score1Class = s1 > s2 ? "winning-score" : "";
-      let score2Class = s2 > s1 ? "winning-score" : "";
+      if (s1 > s2) {
+          score1Class = "winning-score";
+      } else if (s2 > s1) {
+          score2Class = "winning-score";
+      } else {
+          score1Class = "equal-score";
+          score2Class = "equal-score";
+      }
 
       container.innerHTML = `
           <div class="stream-wrapper">
@@ -245,7 +429,6 @@
                       <div class="broadcast-team-left">
                           <div class="broadcast-team-name">${t1}</div>
                       </div>
-                      ${showWin1 ? `<div class="stream-win-badge">WIN</div>` : ''}
                   </div>
 
                   <!-- Centro: Estado y Marcador -->
@@ -263,31 +446,31 @@
                       <div class="broadcast-team-right">
                           <div class="broadcast-team-name">${t2}</div>
                       </div>
-                      ${showWin2 ? `<div class="stream-win-badge">WIN</div>` : ''}
                   </div>
               </div>
           </div>
       `;
   }
 
-  loadActiveMatch();
+  loadTournamentState();
 
   // Escuchar cambios en tiempo real en la tabla tournament_state
   _supabase
-    .channel('public:stream_active_match')
+    .channel('public:stream_widget_state')
     .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'tournament_state' }, payload => {
         if (payload.new) {
             if (payload.new.match_scores) {
                 globalMatchScores = payload.new.match_scores;
             }
-            // Si el admin limpia o reinicia el active_match (lo manda como null o vacío)
-            if (!payload.new.active_match || !payload.new.active_match.team1 || !payload.new.active_match.team2) {
-                currentMatchData = null;
-                renderStreamMatch(null);
-            } else {
-                currentMatchData = payload.new.active_match;
-                renderStreamMatch(currentMatchData);
+            lastVictoryData = payload.new.last_victory || null;
+            championBox = payload.new.champion_box || null;
+
+            if (tempVictoryTimer) {
+                clearTimeout(tempVictoryTimer);
+                tempVictoryTimer = null;
             }
+
+            processDisplayState(payload.new.active_match);
         }
     })
     .subscribe();
